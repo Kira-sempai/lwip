@@ -185,13 +185,13 @@ static char http_uri_buf[LWIP_HTTPD_URI_BUF_LEN + 1];
  * requested file.
  */
 #define NUM_FILE_HDR_STRINGS 7
-#define HDR_STRINGS_IDX_HTTP_STATUS          0 /* e.g. "HTTP/1.0 200 OK\r\n" */
-#define HDR_STRINGS_IDX_SERVER_NAME          1 /* e.g. "Server: "HTTPD_SERVER_AGENT"\r\n" */
-#define HDR_STRINGS_IDX_CONTENT_LEN_KEPALIVE 2 /* e.g. "Content-Length: xy\r\n" and/or "Connection: keep-alive\r\n" */
-#define HDR_STRINGS_IDX_CONTENT_LEN_NR       3 /* the byte count, when content-length is used */
-#define HDR_STRINGS_IDX_ETAG                 4 /* e.g. "ETag: "2073041041"" */
+#define HDR_STRINGS_IDX_HTTP_STATUS           0 /* e.g. "HTTP/1.0 200 OK\r\n" */
+#define HDR_STRINGS_IDX_SERVER_NAME           1 /* e.g. "Server: "HTTPD_SERVER_AGENT"\r\n" */
+#define HDR_STRINGS_IDX_CONTENT_LEN_KEEPALIVE 2 /* e.g. "Content-Length: xy\r\n" and/or "Connection: keep-alive\r\n" */
+#define HDR_STRINGS_IDX_CONTENT_LEN_NR        3 /* the byte count, when content-length is used */
+#define HDR_STRINGS_IDX_ETAG                  4 /* e.g. "ETag: "2073041041"" */
 #define HDR_STRINGS_IDX_CACHE_CONTROL_MAX_AGE 5 /* e.g. "Cache-Control: max-age=31536000\r\nExpires: Tue, 01 Jan 2030 00:00:00 GMT\r\n" */
-#define HDR_STRINGS_IDX_CONTENT_TYPE         6 /* the content type (or default answer content type including default document) */
+#define HDR_STRINGS_IDX_CONTENT_TYPE          6 /* the content type (or default answer content type including default document) */
 
 /* The dynamically generated Content-Length buffer needs space for CRLF + NULL */
 #define LWIP_HTTPD_MAX_CONTENT_LEN_OFFSET 3
@@ -840,12 +840,11 @@ get_http_headers(struct http_state *hs, const char *uri)
   char *tmp;
   char *ext;
   char *vars;
-  u8_t add_content_len;
 
   /* In all cases, the second header we send is the server identification
      so set it here. */
   hs->hdrs[HDR_STRINGS_IDX_SERVER_NAME] = g_psHTTPHeaderStrings[HTTP_HDR_SERVER];
-  hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEPALIVE] = NULL;
+  hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEEPALIVE] = NULL;
   hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_NR] = NULL;
 
   /* Is this a normal file or the special case we use to send back the
@@ -937,7 +936,6 @@ get_http_headers(struct http_state *hs, const char *uri)
     return;
   }
 #endif /* LWIP_HTTPD_OMIT_HEADER_FOR_EXTENSIONLESS_URI */
-  add_content_len = 1;
   /* Did we find a matching extension? */
   if (content_type < NUM_HTTP_HEADERS) {
     /* yes, store it */
@@ -949,16 +947,28 @@ get_http_headers(struct http_state *hs, const char *uri)
     /* No - use the default, plain text file type. */
     hs->hdrs[HDR_STRINGS_IDX_CONTENT_TYPE] = HTTP_HDR_DEFAULT_TYPE;
   }
-  /* Add content-length header? */
+  /* Set up to send the first header string. */
+  hs->hdr_index = 0;
+  hs->hdr_pos = 0;
+}
+
+/* Add content-length header? */
+static void
+get_http_content_length(struct http_state *hs)
+{
+  u8_t add_content_len = 0;
+
+  LWIP_ASSERT("already been here?", hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEEPALIVE] == NULL);
+
+  add_content_len = 0;
 #if LWIP_HTTPD_SSI
-  if (hs->ssi != NULL) {
-    add_content_len = 0; /* @todo: get maximum file length from SSI */
-  } else
+  if (hs->ssi == NULL) /* @todo: get maximum file length from SSI */
 #endif /* LWIP_HTTPD_SSI */
-    if ((hs->handle == NULL) ||
-        ((hs->handle->flags & (FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT)) == FS_FILE_FLAGS_HEADER_INCLUDED)) {
-      add_content_len = 0;
+  {
+    if ((hs->handle != NULL) && (hs->handle->flags & FS_FILE_FLAGS_HEADER_PERSISTENT)) {
+      add_content_len = 1;
     }
+  }
   if (add_content_len) {
     size_t len;
     lwip_itoa(hs->hdr_content_len, (size_t)LWIP_HTTPD_MAX_CONTENT_LEN_SIZE,
@@ -973,19 +983,16 @@ get_http_headers(struct http_state *hs, const char *uri)
   }
 #if LWIP_HTTPD_SUPPORT_11_KEEPALIVE
   if (add_content_len) {
-    hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEPALIVE] = g_psHTTPHeaderStrings[HTTP_HDR_KEEPALIVE_LEN];
+    hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEEPALIVE] = g_psHTTPHeaderStrings[HTTP_HDR_KEEPALIVE_LEN];
   } else {
-    hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEPALIVE] = g_psHTTPHeaderStrings[HTTP_HDR_CONN_CLOSE];
+    hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEEPALIVE] = g_psHTTPHeaderStrings[HTTP_HDR_CONN_CLOSE];
+    hs->keepalive = 0;
   }
 #else /* LWIP_HTTPD_SUPPORT_11_KEEPALIVE */
   if (add_content_len) {
-    hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEPALIVE] = g_psHTTPHeaderStrings[HTTP_HDR_CONTENT_LENGTH];
+    hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEEPALIVE] = g_psHTTPHeaderStrings[HTTP_HDR_CONTENT_LENGTH];
   }
 #endif /* LWIP_HTTPD_SUPPORT_11_KEEPALIVE */
-
-  /* Set up to send the first header string. */
-  hs->hdr_index = 0;
-  hs->hdr_pos = 0;
 }
 
 /** Sub-function of http_send(): send dynamic headers
@@ -994,7 +1001,7 @@ get_http_headers(struct http_state *hs, const char *uri)
  *           - HTTP_DATA_TO_SEND_CONTINUE: continue with sending HTTP body
  *           - HTTP_DATA_TO_SEND_BREAK: data has been enqueued, headers pending,
  *                                      so don't send HTTP body yet
- *           - HTTP_DATA_TO_SEND_FREED: htt_state and pcb are already freed
+ *           - HTTP_DATA_TO_SEND_FREED: http_state and pcb are already freed
  */
 static u8_t
 http_send_headers(struct altcp_pcb *pcb, struct http_state *hs)
@@ -1003,6 +1010,11 @@ http_send_headers(struct altcp_pcb *pcb, struct http_state *hs)
   u16_t len;
   u8_t data_to_send = HTTP_NO_DATA_TO_SEND;
   u16_t hdrlen, sendlen;
+
+  if (hs->hdrs[HDR_STRINGS_IDX_CONTENT_LEN_KEEPALIVE] == NULL) {
+    /* set up "content-length" and "connection:" headers */
+    get_http_content_length(hs);
+  }
 
   /* How much data can we send? */
   len = altcp_sndbuf(pcb);
@@ -1748,7 +1760,11 @@ http_post_rxpbuf(struct http_state *hs, struct pbuf *p)
   /* prevent connection being closed if httpd_post_data_recved() is called nested */
   hs->unrecved_bytes++;
 #endif
-  err = httpd_post_receive_data(hs, p);
+  if (p != NULL) {
+    err = httpd_post_receive_data(hs, p);
+  } else {
+    err = ERR_OK;
+  }
 #if LWIP_HTTPD_SUPPORT_POST && LWIP_HTTPD_POST_MANUAL_WND
   hs->unrecved_bytes--;
 #endif
@@ -1932,6 +1948,7 @@ static void
 http_continue(void *connection)
 {
   struct http_state *hs = (struct http_state *)connection;
+  LWIP_ASSERT_CORE_LOCKED();
   if (hs && (hs->pcb) && (hs->handle)) {
     LWIP_ASSERT("hs->pcb != NULL", hs->pcb != NULL);
     LWIP_DEBUGF(HTTPD_DEBUG | LWIP_DBG_TRACE, ("httpd_continue: try to send more data\n"));
@@ -2240,6 +2257,7 @@ http_find_file(struct http_state *hs, const char *uri, int is_09)
           size_t name_len = strlen(httpd_default_filenames[loop].name);
           size_t name_copy_len = LWIP_MIN(len_left, name_len);
           MEMCPY(&http_uri_buf[copy_len], httpd_default_filenames[loop].name, name_copy_len);
+          http_uri_buf[copy_len + name_copy_len] = 0;
         }
         file_name = http_uri_buf;
       } else
@@ -2337,8 +2355,16 @@ static err_t
 http_init_file(struct http_state *hs, struct fs_file *file, int is_09, const char *uri,
                u8_t tag_check, char *params)
 {
+#if !LWIP_HTTPD_SUPPORT_V09
+  LWIP_UNUSED_ARG(is_09);
+#endif
   if (file != NULL) {
     /* file opened, initialise struct http_state */
+#if !LWIP_HTTPD_DYNAMIC_FILE_READ
+    /* If dynamic read is disabled, file data must be in one piece and available now */
+    LWIP_ASSERT("file->data != NULL", file->data != NULL);
+#endif
+
 #if LWIP_HTTPD_SSI
     if (tag_check) {
       struct http_ssi_state *ssi = http_ssi_state_alloc();
@@ -2355,6 +2381,27 @@ http_init_file(struct http_state *hs, struct fs_file *file, int is_09, const cha
     LWIP_UNUSED_ARG(tag_check);
 #endif /* LWIP_HTTPD_SSI */
     hs->handle = file;
+#if LWIP_HTTPD_CGI_SSI
+    if (params != NULL) {
+      /* URI contains parameters, call generic CGI handler */
+      int count;
+#if LWIP_HTTPD_CGI
+      if (http_cgi_paramcount >= 0) {
+        count = http_cgi_paramcount;
+      } else
+#endif
+      {
+        count = extract_uri_parameters(hs, params);
+      }
+      httpd_cgi_handler(file, uri, count, http_cgi_params, http_cgi_param_vals
+#if defined(LWIP_HTTPD_FILE_STATE) && LWIP_HTTPD_FILE_STATE
+                        , file->state
+#endif /* LWIP_HTTPD_FILE_STATE */
+                       );
+    }
+#else /* LWIP_HTTPD_CGI_SSI */
+    LWIP_UNUSED_ARG(params);
+#endif /* LWIP_HTTPD_CGI_SSI */
     hs->file = file->data;
     LWIP_ASSERT("File length must be positive!", (file->len >= 0));
 #if LWIP_HTTPD_CUSTOM_FILES
@@ -2386,27 +2433,6 @@ http_init_file(struct http_state *hs, struct fs_file *file, int is_09, const cha
       }
     }
 #endif /* LWIP_HTTPD_SUPPORT_V09*/
-#if LWIP_HTTPD_CGI_SSI
-    if (params != NULL) {
-      /* URI contains parameters, call generic CGI handler */
-      int count;
-#if LWIP_HTTPD_CGI
-      if (http_cgi_paramcount >= 0) {
-        count = http_cgi_paramcount;
-      } else
-#endif
-      {
-        count = extract_uri_parameters(hs, params);
-      }
-      httpd_cgi_handler(uri, count, http_cgi_params, http_cgi_param_vals
-#if defined(LWIP_HTTPD_FILE_STATE) && LWIP_HTTPD_FILE_STATE
-                        , hs->handle->state
-#endif /* LWIP_HTTPD_FILE_STATE */
-                       );
-    }
-#else /* LWIP_HTTPD_CGI_SSI */
-    LWIP_UNUSED_ARG(params);
-#endif /* LWIP_HTTPD_CGI_SSI */
   } else {
     hs->handle = NULL;
     hs->file = NULL;
@@ -2691,6 +2717,8 @@ httpd_init(void)
 #endif
 #endif
   LWIP_DEBUGF(HTTPD_DEBUG, ("httpd_init\n"));
+
+  /* LWIP_ASSERT_CORE_LOCKED(); is checked by tcp_new() */
 
   pcb = altcp_tcp_new_ip_type(IPADDR_TYPE_ANY);
   LWIP_ASSERT("httpd_init: tcp_new failed", pcb != NULL);

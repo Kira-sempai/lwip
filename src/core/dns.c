@@ -31,6 +31,8 @@
  *
  * All functions must be called from TCPIP thread.
  *
+ * @see DNS_MAX_SERVERS
+ * @see LWIP_DHCP_MAX_DNS_SERVERS
  * @see @ref netconn_common for thread-safe access.
  */
 
@@ -635,6 +637,11 @@ dns_lookup(const char *name, ip_addr_t *addr LWIP_DNS_ADDRTYPE_ARG(u8_t dns_addr
  * entry (otherwise, answers might arrive late for hostname not on the list
  * any more).
  *
+ * For now, this function compares case-insensitive to cope with all kinds of
+ * servers. This also means that "dns 0x20 bit encoding" must be checked
+ * externally, if we want to implement it.
+ * Currently, the request is sent exactly as passed in by he user request.
+ *
  * @param query hostname (not encoded) from the dns_table
  * @param p pbuf containing the encoded hostname in the DNS response
  * @param start_offset offset into p where the name starts
@@ -647,10 +654,12 @@ dns_compare_name(const char *query, struct pbuf *p, u16_t start_offset)
   u16_t response_offset = start_offset;
 
   do {
-    n = pbuf_try_get_at(p, response_offset++);
-    if ((n < 0) || (response_offset == 0)) {
+    n = pbuf_try_get_at(p, response_offset);
+    if ((n < 0) || (response_offset == 0xFFFF)) {
+      /* error or overflow */
       return 0xFFFF;
     }
+    response_offset++;
     /** @see RFC 1035 - 4.1.4. Message compression */
     if ((n & 0xc0) == 0xc0) {
       /* Compressed name: cannot be equal since we don't send them */
@@ -662,13 +671,14 @@ dns_compare_name(const char *query, struct pbuf *p, u16_t start_offset)
         if (c < 0) {
           return 0xFFFF;
         }
-        if ((*query) != (u8_t)c) {
+        if (lwip_tolower((*query)) != lwip_tolower((u8_t)c)) {
           return 0xFFFF;
         }
-        ++response_offset;
-        if (response_offset == 0) {
+        if (response_offset == 0xFFFF) {
+          /* would overflow */
           return 0xFFFF;
         }
+        response_offset++;
         ++query;
         --n;
       }
@@ -681,6 +691,7 @@ dns_compare_name(const char *query, struct pbuf *p, u16_t start_offset)
   } while (n != 0);
 
   if (response_offset == 0xFFFF) {
+    /* would overflow */
     return 0xFFFF;
   }
   return (u16_t)(response_offset + 1);

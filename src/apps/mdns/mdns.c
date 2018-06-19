@@ -1421,7 +1421,8 @@ mdns_send_outpacket(struct mdns_outpacket *outpkt)
       }
 #endif
 #if LWIP_IPV4
-      if (!(outpkt->host_replies & REPLY_HOST_A)) {
+      if (!(outpkt->host_replies & REPLY_HOST_A) &&
+          !ip4_addr_isany_val(*netif_ip4_addr(outpkt->netif))) {
         res = mdns_add_a_answer(outpkt, outpkt->cache_flush, outpkt->netif);
         if (res != ERR_OK) {
           goto cleanup;
@@ -1813,7 +1814,8 @@ mdns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr,
 
 #if LWIP_IPV6
   if (IP_IS_V6(ip_current_dest_addr())) {
-    if (!ip_addr_cmp(ip_current_dest_addr(), &v6group)) {
+    /* instead of having one 'v6group' per netif, just compare zoneless here */
+    if (!ip_addr_cmp_zoneless(ip_current_dest_addr(), &v6group)) {
       packet.recv_unicast = 1;
     }
   }
@@ -1836,32 +1838,6 @@ dealloc:
   pbuf_free(p);
 }
 
-/**
- * @ingroup mdns
- * Announce IP settings have changed on netif.
- * Call this in your callback registered by netif_set_status_callback().
- * No need to call this function when LWIP_NETIF_EXT_STATUS_CALLBACK==1,
- * this handled automatically for you.
- * @param netif The network interface where settings have changed.
- */
-void
-mdns_resp_netif_settings_changed(struct netif *netif)
-{
-  LWIP_ERROR("mdns_resp_netif_ip_changed: netif != NULL", (netif != NULL), return);
-
-  if (NETIF_TO_HOST(netif) == NULL) {
-    return;
-  }
-
-  /* Announce on IPv6 and IPv4 */
-#if LWIP_IPV6
-  mdns_announce(netif, IP6_ADDR_ANY);
-#endif
-#if LWIP_IPV4
-  mdns_announce(netif, IP4_ADDR_ANY);
-#endif
-}
-
 #if LWIP_NETIF_EXT_STATUS_CALLBACK
 static void
 mdns_netif_ext_status_callback(struct netif *netif, netif_nsc_reason_t reason, const netif_ext_callback_args_t *args)
@@ -1873,28 +1849,21 @@ mdns_netif_ext_status_callback(struct netif *netif, netif_nsc_reason_t reason, c
     return;
   }
 
-  switch (reason) {
-    case LWIP_NSC_STATUS_CHANGED:
-      if (args->status_changed.state != 0) {
-        mdns_resp_netif_settings_changed(netif);
-      }
-      /* TODO: send goodbye message */
-      break;
-    case LWIP_NSC_LINK_CHANGED:
-      if (args->link_changed.state != 0) {
-        mdns_resp_netif_settings_changed(netif);
-      }
-      break;
-    case LWIP_NSC_IPV4_ADDRESS_CHANGED:  /* fall through */
-    case LWIP_NSC_IPV4_GATEWAY_CHANGED:  /* fall through */
-    case LWIP_NSC_IPV4_NETMASK_CHANGED:  /* fall through */
-    case LWIP_NSC_IPV4_SETTINGS_CHANGED: /* fall through */
-    case LWIP_NSC_IPV6_SET:              /* fall through */
-    case LWIP_NSC_IPV6_ADDR_STATE_CHANGED:
-      mdns_resp_netif_settings_changed(netif);
-      break;
-    default:
-      break;
+  if (reason & LWIP_NSC_STATUS_CHANGED) {
+    if (args->status_changed.state != 0) {
+      mdns_resp_announce(netif);
+    }
+    /* TODO: send goodbye message */
+  }
+  if (reason & LWIP_NSC_LINK_CHANGED) {
+    if (args->link_changed.state != 0) {
+      mdns_resp_announce(netif);
+    }
+  }
+  if (reason & (LWIP_NSC_IPV4_ADDRESS_CHANGED | LWIP_NSC_IPV4_GATEWAY_CHANGED |
+      LWIP_NSC_IPV4_NETMASK_CHANGED | LWIP_NSC_IPV4_SETTINGS_CHANGED |
+      LWIP_NSC_IPV6_SET | LWIP_NSC_IPV6_ADDR_STATE_CHANGED)) {
+    mdns_resp_announce(netif);
   }
 }
 #endif
@@ -1902,6 +1871,7 @@ mdns_netif_ext_status_callback(struct netif *netif, netif_nsc_reason_t reason, c
 /**
  * @ingroup mdns
  * Activate MDNS responder for a network interface and send announce packets.
+ * Don't forget to call mdns_resp_announce() after you added all netifs and services.
  * @param netif The network interface to activate.
  * @param hostname Name to use. Queries for &lt;hostname&gt;.local will be answered
  *                 with the IP addresses of the netif. The hostname will be copied, the
@@ -1915,6 +1885,7 @@ mdns_resp_add_netif(struct netif *netif, const char *hostname, u32_t dns_ttl)
   err_t res;
   struct mdns_host *mdns;
 
+  LWIP_ASSERT_CORE_LOCKED();
   LWIP_ERROR("mdns_resp_add_netif: netif != NULL", (netif != NULL), return ERR_VAL);
   LWIP_ERROR("mdns_resp_add_netif: Hostname too long", (strlen(hostname) <= MDNS_LABEL_MAXLEN), return ERR_VAL);
 
@@ -1941,7 +1912,6 @@ mdns_resp_add_netif(struct netif *netif, const char *hostname, u32_t dns_ttl)
   }
 #endif
 
-  mdns_resp_netif_settings_changed(netif);
   return ERR_OK;
 
 cleanup:
@@ -1963,6 +1933,7 @@ mdns_resp_remove_netif(struct netif *netif)
   int i;
   struct mdns_host *mdns;
 
+  LWIP_ASSERT_CORE_LOCKED();
   LWIP_ASSERT("mdns_resp_remove_netif: Null pointer", netif);
   mdns = NETIF_TO_HOST(netif);
   LWIP_ERROR("mdns_resp_remove_netif: Not an active netif", (mdns != NULL), return ERR_VAL);
@@ -1990,6 +1961,7 @@ mdns_resp_remove_netif(struct netif *netif)
 /**
  * @ingroup mdns
  * Add a service to the selected network interface.
+ * Don't forget to call mdns_resp_announce() after you added all services.
  * @param netif The network interface to publish this service on
  * @param name The name of the service
  * @param service The service type, like "_http"
@@ -2010,6 +1982,7 @@ mdns_resp_add_service(struct netif *netif, const char *name, const char *service
   struct mdns_service *srv;
   struct mdns_host *mdns;
 
+  LWIP_ASSERT_CORE_LOCKED();
   LWIP_ASSERT("mdns_resp_add_service: netif != NULL", netif);
   mdns = NETIF_TO_HOST(netif);
   LWIP_ERROR("mdns_resp_add_service: Not an mdns netif", (mdns != NULL), return ERR_VAL);
@@ -2039,13 +2012,6 @@ mdns_resp_add_service(struct netif *netif, const char *name, const char *service
 
   mdns->services[slot] = srv;
 
-  /* Announce on IPv6 and IPv4 */
-#if LWIP_IPV6
-  mdns_announce(netif, IP6_ADDR_ANY);
-#endif
-#if LWIP_IPV4
-  mdns_announce(netif, IP4_ADDR_ANY);
-#endif
   return slot;
 }
 
@@ -2085,10 +2051,37 @@ mdns_resp_del_service(struct netif *netif, s8_t slot)
 err_t
 mdns_resp_add_service_txtitem(struct mdns_service *service, const char *txt, u8_t txt_len)
 {
+  LWIP_ASSERT_CORE_LOCKED();
   LWIP_ASSERT("mdns_resp_add_service_txtitem: service != NULL", service);
 
   /* Use a mdns_domain struct to store txt chunks since it is the same encoding */
   return mdns_domain_add_label(&service->txtdata, txt, txt_len);
+}
+
+/**
+ * @ingroup mdns
+ * Send unsolicited answer containing all our known data
+ * @param netif The network interface to send on
+ */
+void
+mdns_resp_announce(struct netif *netif)
+{
+  LWIP_ASSERT_CORE_LOCKED();
+  LWIP_ERROR("mdns_resp_announce: netif != NULL", (netif != NULL), return);
+
+  if (NETIF_TO_HOST(netif) == NULL) {
+    return;
+  }
+
+  /* Announce on IPv6 and IPv4 */
+#if LWIP_IPV6
+  mdns_announce(netif, IP6_ADDR_ANY);
+#endif
+#if LWIP_IPV4
+  if (!ip4_addr_isany_val(*netif_ip4_addr(netif))) {
+    mdns_announce(netif, IP4_ADDR_ANY);
+  }
+#endif
 }
 
 /**
@@ -2099,6 +2092,8 @@ void
 mdns_resp_init(void)
 {
   err_t res;
+
+  /* LWIP_ASSERT_CORE_LOCKED(); is checked by udp_new() */
 
   mdns_pcb = udp_new_ip_type(IPADDR_TYPE_ANY);
   LWIP_ASSERT("Failed to allocate pcb", mdns_pcb != NULL);

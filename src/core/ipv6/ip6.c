@@ -51,7 +51,7 @@
 #include "lwip/ip6_addr.h"
 #include "lwip/ip6_frag.h"
 #include "lwip/icmp6.h"
-#include "lwip/raw.h"
+#include "lwip/priv/raw_priv.h"
 #include "lwip/udp.h"
 #include "lwip/priv/tcp_priv.h"
 #include "lwip/dhcp6.h"
@@ -91,6 +91,8 @@ ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest)
 #else /* LWIP_SINGLE_NETIF */
   struct netif *netif;
   s8_t i;
+
+  LWIP_ASSERT_CORE_LOCKED();
 
   /* If single netif configuration, fast return. */
   if ((netif_list != NULL) && (netif_list->next == NULL)) {
@@ -514,6 +516,11 @@ ip6_input(struct pbuf *p, struct netif *inp)
   @todo
   int check_ip_src=1;
 #endif /* IP_ACCEPT_LINK_LAYER_ADDRESSING */
+#if LWIP_RAW
+  raw_input_state_t raw_status;
+#endif /* LWIP_RAW */
+
+  LWIP_ASSERT_CORE_LOCKED();
 
   IP6_STATS_INC(ip6.recv);
 
@@ -567,6 +574,8 @@ ip6_input(struct pbuf *p, struct netif *inp)
   if (ip6_addr_isipv4mappedipv6(ip_2_ip6(&ip_data.current_iphdr_dest)) ||
      ip6_addr_isipv4mappedipv6(ip_2_ip6(&ip_data.current_iphdr_src)) ||
      ip6_addr_ismulticast(ip_2_ip6(&ip_data.current_iphdr_src))) {
+    /* free (drop) packet pbufs */
+    pbuf_free(p);
     IP6_STATS_INC(ip6.err);
     IP6_STATS_INC(ip6.drop);
     return ERR_OK;
@@ -1031,14 +1040,6 @@ netif_found:
   }
 
 options_done:
-  if (hlen_tot >= 0x8000) {
-    /* s16_t overflow */
-    LWIP_DEBUGF(IP6_DEBUG | LWIP_DBG_LEVEL_SERIOUS, ("ip6_input: header length overflow: %"U16_F"\n", hlen_tot));
-    pbuf_free(p);
-    IP6_STATS_INC(ip6.proterr);
-    IP6_STATS_INC(ip6.drop);
-    goto options_done;
-  }
 
   /* send to upper layers */
   LWIP_DEBUGF(IP6_DEBUG, ("ip6_input: \n"));
@@ -1049,9 +1050,10 @@ options_done:
   
 #if LWIP_RAW
   /* p points to IPv6 header again for raw_input. */
-  pbuf_header_force(p, (s16_t)hlen_tot);
+  pbuf_add_header_force(p, hlen_tot);
   /* raw input did not eat the packet? */
-  if (raw_input(p, inp) == 0)
+  raw_status = raw_input(p, inp);
+  if (raw_status != RAW_INPUT_EATEN)
   {
     /* Point to payload. */
     pbuf_remove_header(p, hlen_tot);
@@ -1081,19 +1083,26 @@ options_done:
       break;
 #endif /* LWIP_ICMP */
     default:
+#if LWIP_RAW
+        if (raw_status == RAW_INPUT_DELIVERED) {
+          /* @todo: ipv6 mib in-delivers? */
+        } else
+#endif /* LWIP_RAW */
+        {
 #if LWIP_ICMP6
-      /* p points to IPv6 header again for raw_input. */
-      pbuf_header_force(p, (s16_t)hlen_tot);
-      /* send ICMP parameter problem unless it was a multicast or ICMPv6 */
-      if ((!ip6_addr_ismulticast(ip6_current_dest_addr())) &&
-          (IP6H_NEXTH(ip6hdr) != IP6_NEXTH_ICMP6)) {
-        icmp6_param_problem(p, ICMP6_PP_HEADER, nexth);
-      }
+        /* p points to IPv6 header again for raw_input. */
+        pbuf_add_header_force(p, hlen_tot);
+        /* send ICMP parameter problem unless it was a multicast or ICMPv6 */
+        if ((!ip6_addr_ismulticast(ip6_current_dest_addr())) &&
+            (IP6H_NEXTH(ip6hdr) != IP6_NEXTH_ICMP6)) {
+          icmp6_param_problem(p, ICMP6_PP_HEADER, nexth);
+        }
 #endif /* LWIP_ICMP */
-      LWIP_DEBUGF(IP6_DEBUG | LWIP_DBG_LEVEL_SERIOUS, ("ip6_input: Unsupported transport protocol %"U16_F"\n", (u16_t)IP6H_NEXTH(ip6hdr)));
+        LWIP_DEBUGF(IP6_DEBUG | LWIP_DBG_LEVEL_SERIOUS, ("ip6_input: Unsupported transport protocol %"U16_F"\n", (u16_t)IP6H_NEXTH(ip6hdr)));
+        IP6_STATS_INC(ip6.proterr);
+        IP6_STATS_INC(ip6.drop);
+      }
       pbuf_free(p);
-      IP6_STATS_INC(ip6.proterr);
-      IP6_STATS_INC(ip6.drop);
       break;
     }
   }
@@ -1134,7 +1143,7 @@ ip6_input_cleanup:
  * @param netif the netif on which to send this packet
  * @return ERR_OK if the packet was sent OK
  *         ERR_BUF if p doesn't have enough space for IPv6/LINK headers
- *         returns errors returned by netif->output
+ *         returns errors returned by netif->output_ip6
  */
 err_t
 ip6_output_if(struct pbuf *p, const ip6_addr_t *src, const ip6_addr_t *dest,
@@ -1168,6 +1177,7 @@ ip6_output_if_src(struct pbuf *p, const ip6_addr_t *src, const ip6_addr_t *dest,
   struct ip6_hdr *ip6hdr;
   ip6_addr_t dest_addr;
 
+  LWIP_ASSERT_CORE_LOCKED();
   LWIP_IP_CHECK_PBUF_REF_COUNT_FOR_TX(p);
 
   /* Should the IPv6 header be generated or is it already included in p? */
@@ -1250,7 +1260,7 @@ ip6_output_if_src(struct pbuf *p, const ip6_addr_t *src, const ip6_addr_t *dest,
 #endif /* ENABLE_LOOPBACK */
 #if LWIP_IPV6_FRAG
   /* don't fragment if interface has mtu set to 0 [loopif] */
-  if (netif->mtu && (p->tot_len > nd6_get_destination_mtu(dest, netif))) {
+  if (netif_mtu6(netif) && (p->tot_len > nd6_get_destination_mtu(dest, netif))) {
     return ip6_frag(p, netif, dest);
   }
 #endif /* LWIP_IPV6_FRAG */

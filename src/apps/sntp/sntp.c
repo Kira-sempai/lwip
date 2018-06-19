@@ -231,6 +231,10 @@ struct sntp_server {
   const char *name;
 #endif /* SNTP_SERVER_DNS */
   ip_addr_t addr;
+#if SNTP_MONITOR_SERVER_REACHABILITY
+  /** Reachability shift register as described in RFC 5905 */
+  u8_t reachability;
+#endif /* SNTP_MONITOR_SERVER_REACHABILITY */
 };
 static struct sntp_server sntp_servers[SNTP_MAX_SERVERS];
 
@@ -499,6 +503,10 @@ sntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr,
     /* correct packet received: process it it */
     sntp_process(&timestamps);
 
+#if SNTP_MONITOR_SERVER_REACHABILITY
+    /* indicate that server responded */
+    sntp_servers[sntp_current_server].reachability |= 1;
+#endif /* SNTP_MONITOR_SERVER_REACHABILITY */
     /* Set up timeout for next request (only if poll response was received)*/
     if (sntp_opmode == SNTP_OPMODE_POLL) {
       u32_t sntp_update_delay;
@@ -545,6 +553,10 @@ sntp_send_request(const ip_addr_t *server_addr)
     udp_sendto(sntp_pcb, p, server_addr, SNTP_PORT);
     /* free the pbuf after sending it */
     pbuf_free(p);
+#if SNTP_MONITOR_SERVER_REACHABILITY
+    /* indicate new packet has been sent */
+    sntp_servers[sntp_current_server].reachability <<= 1;
+#endif /* SNTP_MONITOR_SERVER_REACHABILITY */
     /* set up receive timeout: try next server or retry on timeout */
     sys_timeout((u32_t)SNTP_RECV_TIMEOUT, sntp_try_next_server, NULL);
 #if SNTP_CHECK_RESPONSE >= 1
@@ -572,6 +584,7 @@ sntp_dns_found(const char *hostname, const ip_addr_t *ipaddr, void *arg)
   if (ipaddr != NULL) {
     /* Address resolved, send request */
     LWIP_DEBUGF(SNTP_DEBUG_STATE, ("sntp_dns_found: Server address resolved, sending request\n"));
+    sntp_servers[sntp_current_server].addr = *ipaddr;
     sntp_send_request(ipaddr);
   } else {
     /* DNS resolving failed -> try another server */
@@ -634,6 +647,8 @@ sntp_request(void *arg)
 void
 sntp_init(void)
 {
+  /* LWIP_ASSERT_CORE_LOCKED(); is checked by udp_new() */
+
 #ifdef SNTP_SERVER_ADDRESS
 #if SNTP_SERVER_DNS
   sntp_setservername(0, SNTP_SERVER_ADDRESS);
@@ -670,7 +685,14 @@ sntp_init(void)
 void
 sntp_stop(void)
 {
+  LWIP_ASSERT_CORE_LOCKED();
   if (sntp_pcb != NULL) {
+#if SNTP_MONITOR_SERVER_REACHABILITY
+    u8_t i;
+    for (i = 0; i < SNTP_MAX_SERVERS; i++) {
+      sntp_servers[i].reachability = 0;
+    }
+#endif /* SNTP_MONITOR_SERVER_REACHABILITY */
     sys_untimeout(sntp_request, NULL);
     sys_untimeout(sntp_try_next_server, NULL);
     udp_remove(sntp_pcb);
@@ -695,6 +717,7 @@ u8_t sntp_enabled(void)
 void
 sntp_setoperatingmode(u8_t operating_mode)
 {
+  LWIP_ASSERT_CORE_LOCKED();
   LWIP_ASSERT("Invalid operating mode", operating_mode <= SNTP_OPMODE_LISTENONLY);
   LWIP_ASSERT("Operating mode must not be set while SNTP client is running", sntp_pcb == NULL);
   sntp_opmode = operating_mode;
@@ -710,6 +733,23 @@ sntp_getoperatingmode(void)
   return sntp_opmode;
 }
 
+#if SNTP_MONITOR_SERVER_REACHABILITY
+/**
+ * @ingroup sntp
+ * Gets the server reachability shift register as described in RFC 5905.
+ *
+ * @param idx the index of the NTP server
+ */
+u8_t
+sntp_getreachability(u8_t idx)
+{
+  if (idx < SNTP_MAX_SERVERS) {
+    return sntp_servers[idx].reachability;
+  }
+  return 0;
+}
+#endif /* SNTP_MONITOR_SERVER_REACHABILITY */
+
 #if SNTP_GET_SERVERS_FROM_DHCP
 /**
  * Config SNTP server handling by IP address, name, or DHCP; clear table
@@ -719,6 +759,7 @@ void
 sntp_servermode_dhcp(int set_servers_from_dhcp)
 {
   u8_t new_mode = set_servers_from_dhcp ? 1 : 0;
+  LWIP_ASSERT_CORE_LOCKED();
   if (sntp_set_servers_from_dhcp != new_mode) {
     sntp_set_servers_from_dhcp = new_mode;
   }
@@ -735,6 +776,7 @@ sntp_servermode_dhcp(int set_servers_from_dhcp)
 void
 sntp_setserver(u8_t idx, const ip_addr_t *server)
 {
+  LWIP_ASSERT_CORE_LOCKED();
   if (idx < SNTP_MAX_SERVERS) {
     if (server != NULL) {
       sntp_servers[idx].addr = (*server);
@@ -801,6 +843,7 @@ sntp_getserver(u8_t idx)
 void
 sntp_setservername(u8_t idx, const char *server)
 {
+  LWIP_ASSERT_CORE_LOCKED();
   if (idx < SNTP_MAX_SERVERS) {
     sntp_servers[idx].name = server;
   }

@@ -203,6 +203,9 @@ typedef int ssize_t;
 #define SSIZE_MAX INT_MAX
 #endif /* SSIZE_MAX */
 
+/* some maximum values needed in lwip code */
+#define LWIP_UINT32_MAX 0xffffffff
+
 /** Define this to 1 in arch/cc.h of your port if your compiler does not provide
  * the ctype.h header. If ctype.h is available, a few character functions
  * are mapped to the appropriate functions (lwip_islower, lwip_isdigit...), if
@@ -218,12 +221,15 @@ typedef int ssize_t;
 #define lwip_isxdigit(c)          (lwip_isdigit(c) || lwip_in_range((c), 'a', 'f') || lwip_in_range((c), 'A', 'F'))
 #define lwip_islower(c)           lwip_in_range((c), 'a', 'z')
 #define lwip_isspace(c)           ((c) == ' ' || (c) == '\f' || (c) == '\n' || (c) == '\r' || (c) == '\t' || (c) == '\v')
+#define lwip_isupper(c)           lwip_in_range((c), 'A', 'Z')
+#define lwip_tolower(c)           (lwip_isupper(c) ? (c) - 'A' + 'a' : c)
 #else
 #include <ctype.h>
 #define lwip_isdigit(c)           isdigit((unsigned char)(c))
 #define lwip_isxdigit(c)          isxdigit((unsigned char)(c))
 #define lwip_islower(c)           islower((unsigned char)(c))
 #define lwip_isspace(c)           isspace((unsigned char)(c))
+#define lwip_tolower(c)           tolower((unsigned char)(c))
 #endif
 
 /** C++ const_cast<target_type>(val) equivalent to remove constness from a value (GCC -Wcast-qual) */

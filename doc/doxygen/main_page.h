@@ -121,6 +121,8 @@
  * lwIP can be used in two basic modes: @ref lwip_nosys (no OS/RTOS 
  * running on target system) or @ref lwip_os (there is an OS running
  * on the target system).
+ * 
+ * See also: @ref multithreading (especially the part about @ref LWIP_ASSERT_CORE_LOCKED()!)
  *
  * Mainloop Mode
  * -------------
@@ -164,6 +166,28 @@
  *    @ref LOCK_TCPIP_CORE() and @ref UNLOCK_TCPIP_CORE().
  *    These macros cannot be used in an interrupt context!
  *    Note the OS must correctly handle priority inversion for this.
+ *
+ * Cache / DMA issues
+ * ==================
+ *
+ * DMA-capable ethernet hardware and zero-copy RX
+ * ----------------------------------------------
+ * 
+ * lwIP changes the content of RECEIVED pbufs in the TCP code path.
+ * This implies one or more cacheline(s) of the RX pbuf become dirty
+ * and need to be flushed before the memory is handed over to the
+ * DMA ethernet hardware for the next telegram to be received.
+ * See http://lwip.100.n7.nabble.com/in-place-overwriting-of-payload-via-static-quot-tcphdr-quot-pointer-td31434.html
+ * for a more detailed explanation.
+ * Also keep in mind the user application may also write into pbufs,
+ * so it is generally a bug not to flush the data cache before handing
+ * a buffer to DMA hardware.
+ *
+ * DMA-capable ethernet hardware and cacheline alignment
+ * -----------------------------------------------------
+ * Nice description about DMA capable hardware and buffer handling:
+ * http://www.pebblebay.com/a-guide-to-using-direct-memory-access-in-embedded-systems-part-two/
+ * Read especially sections "Cache coherency" and "Buffer alignment".
  */
 
 /**
@@ -293,7 +317,7 @@ Call these functions in the order of appearance:
  * 
  * Additionaly, memory (de-)allocation functions may be
  * called from multiple threads (not ISR!) with NO_SYS=0
- * since they are protected by SYS_LIGHTWEIGHT_PROT and/or
+ * since they are protected by @ref SYS_LIGHTWEIGHT_PROT and/or
  * semaphores.
  * 
  * Netconn or Socket API functions are thread safe against the
@@ -301,12 +325,32 @@ Call these functions in the order of appearance:
  * granularity level. That is, a UDP or TCP control block must
  * not be shared among multiple threads without proper locking.
  * 
- * If SYS_LIGHTWEIGHT_PROT is set to 1 and
- * LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT is set to 1,
+ * If @ref SYS_LIGHTWEIGHT_PROT is set to 1 and
+ * @ref LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT is set to 1,
  * pbuf_free() may also be called from another thread or
  * an ISR (since only then, mem_free - for PBUF_RAM - may
  * be called from an ISR: otherwise, the HEAP is only
  * protected by semaphores).
+ * 
+ * How to get threading done right
+ * -------------------------------
+ * 
+ * It is strongly recommended to implement the LWIP_ASSERT_CORE_LOCKED()
+ * macro in an application that uses multithreading. lwIP code has
+ * several places where a check for a correct thread context is
+ * implemented which greatly helps the user to get threading done right.
+ * See the example sys_arch.c files in unix and Win32 port 
+ * in the contrib repository.
+ * 
+ * In short: Copy the functions sys_mark_tcpip_thread() and 
+ * sys_check_core_locking() to your port and modify them to work with your OS.
+ * Then let @ref LWIP_ASSERT_CORE_LOCKED() and @ref LWIP_MARK_TCPIP_THREAD()
+ * point to these functions.
+ * 
+ * If you use @ref LWIP_TCPIP_CORE_LOCKING, you also need to copy and adapt
+ * the functions sys_lock_tcpip_core() and sys_unlock_tcpip_core().
+ * Let @ref LOCK_TCPIP_CORE() and @ref UNLOCK_TCPIP_CORE() point 
+ * to these functions. 
  */
 
 /**
