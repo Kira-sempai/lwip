@@ -11,10 +11,10 @@ sources = Split("""
 	
 	src/api/err.c
 	
-	src/apps/httpd/fs.c
-	src/apps/httpd/fs_custom_files.cc
-	src/apps/httpd/httpd.c
-	src/apps/httpd/httpd_memory_management.c
+	src/apps/http/fs.c
+	src/apps/http/fs_custom_files.cc
+	src/apps/http/httpd.c
+	src/apps/http/httpd_memory_management.c
 	
 	src/core/def.c
 	src/core/dns.c
