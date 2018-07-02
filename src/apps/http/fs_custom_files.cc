@@ -177,13 +177,13 @@ int fs_open_custom(struct fs_file *file, const char *name)
 	}
 
 	switch(getFileType(name)) {
-	case CUSTOM_FILE_JSON			: { return initJSONResponse(file, name);}
-	case CUSTOM_FILE_SMALL_PAGES	: { return initSmallPageResponse(file, name);}
-	case CUSTOM_FILE_CONFIGS		: { return openSDFile(file, name);}
-	case CUSTOM_FILE_SD				: { return openSDFile(file, getNormalizedFilePath(name));}
+	case CUSTOM_FILE_JSON       : { return initJSONResponse(file, name);}
+	case CUSTOM_FILE_SMALL_PAGES: { return initSmallPageResponse(file, name);}
+	case CUSTOM_FILE_CONFIGS    : { return openSDFile(file, name);}
+	case CUSTOM_FILE_SD	        : { return openSDFile(file, getNormalizedFilePath(name));}
+	case CUSTOM_FILE_OFF        : return 0;
+	default                     : return 0;
 	}
-
-	return 0;
 }
 
 extern "C"
