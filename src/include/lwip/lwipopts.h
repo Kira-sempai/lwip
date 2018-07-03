@@ -42,19 +42,19 @@ extern signed long memused;
 
 #define TCP_SND_BUF						(2*TCP_MSS)
 // buf size divided by 2
-#define HTTP_MEMUSE_LEVEL_1 8*1024
+#define HTTP_MEMUSE_LEVEL_1 (8*1024)
 // buf size divided by 4
-#define HTTP_MEMUSE_LEVEL_2 12*1024
+#define HTTP_MEMUSE_LEVEL_2 (12*1024)
 
-#define HTTP_MEM_RESERVE 4*1024
+#define HTTP_MEM_RESERVE (4*1024)
 
 #elif defined(MCU_GROUP_IS_STM32F2)
 
 #define TCP_SND_BUF						(6*TCP_MSS)
 // buf size divided by 2
-#define HTTP_MEMUSE_LEVEL_1 12*1024
+#define HTTP_MEMUSE_LEVEL_1 (12*1024)
 // buf size divided by 4
-#define HTTP_MEMUSE_LEVEL_2 16*1024
+#define HTTP_MEMUSE_LEVEL_2 (16*1024)
 
 #define HTTP_MEM_RESERVE 8*1024
 
@@ -62,11 +62,11 @@ extern signed long memused;
 
 #define TCP_SND_BUF						(6*TCP_MSS)
 // buf size divided by 2
-#define HTTP_MEMUSE_LEVEL_1 12*1024
+#define HTTP_MEMUSE_LEVEL_1 (12*1024)
 // buf size divided by 4
-#define HTTP_MEMUSE_LEVEL_2 16*1024
+#define HTTP_MEMUSE_LEVEL_2 (16*1024)
 
-#define HTTP_MEM_RESERVE 6*1024
+#define HTTP_MEM_RESERVE (6*1024)
 
 #else
 #error "MCU is not defined"
