@@ -230,6 +230,7 @@ typedef int ssize_t;
 #define lwip_isxdigit(c)          isxdigit((unsigned char)(c))
 #define lwip_islower(c)           islower((unsigned char)(c))
 #define lwip_isspace(c)           isspace((unsigned char)(c))
+#define lwip_isupper(c)           isupper((unsigned char)(c))
 #define lwip_tolower(c)           tolower((unsigned char)(c))
 #define lwip_toupper(c)           toupper((unsigned char)(c))
 #endif
@@ -359,7 +360,7 @@ extern "C" {
  * The file included BEFORE the struct is "arch/bpstruct.h".\n
  * The file included AFTER the struct is "arch/epstruct.h".\n
  * This can be used to implement struct packing on MS Visual C compilers, see
- * the Win32 port in the lwIP contrib repository for reference.
+ * the Win32 port in the lwIP/contrib subdir for reference.
  * For examples of packed struct declarations, see include/lwip/prot/ subfolder.\n
  * A port to GCC/clang is included in lwIP, if you use these compilers there is nothing to do here.
  */

@@ -734,7 +734,11 @@ tcp_bind(struct tcp_pcb *pcb, const ip_addr_t *ipaddr, u16_t port)
     }
   }
 
-  if (!ip_addr_isany(ipaddr)) {
+  if (!ip_addr_isany(ipaddr)
+#if LWIP_IPV4 && LWIP_IPV6
+      || (IP_GET_TYPE(ipaddr) != IP_GET_TYPE(&pcb->local_ip))
+#endif /* LWIP_IPV4 && LWIP_IPV6 */
+     ) {
     ip_addr_set(&pcb->local_ip, ipaddr);
   }
   pcb->local_port = port;
@@ -1215,6 +1219,7 @@ tcp_slowtmr_start:
     LWIP_ASSERT("tcp_slowtmr: active pcb->state != TIME-WAIT\n", pcb->state != TIME_WAIT);
     if (pcb->last_timer == tcp_timer_ctr) {
       /* skip this pcb, we have already processed it */
+      prev = pcb;
       pcb = pcb->next;
       continue;
     }

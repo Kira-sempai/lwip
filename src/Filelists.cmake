@@ -5,19 +5,34 @@
 #
 # This file is NOT designed (on purpose) to be used as cmake
 # subdir via add_subdirectory()
-# The intention is to provide greater flexibility to users to 
+# The intention is to provide greater flexibility to users to
 # create their own targets using the *_SRCS variables.
 
+include_guard(GLOBAL)
+
+include(${LWIP_DIR}/contrib/ports/CMakeCommon.cmake)
+
 set(LWIP_VERSION_MAJOR    "2")
-set(LWIP_VERSION_MINOR    "0")
-set(LWIP_VERSION_REVISION "3")
-# LWIP_VERSION_RC is set to LWIP_RC_RELEASE for official releases */
-# LWIP_VERSION_RC is set to LWIP_RC_DEVELOPMENT for Git versions */
+set(LWIP_VERSION_MINOR    "2")
+set(LWIP_VERSION_REVISION "0")
+# LWIP_VERSION_RC is set to LWIP_RC_RELEASE for official releases
+# LWIP_VERSION_RC is set to LWIP_RC_DEVELOPMENT for Git versions
+# Numbers 1..31 are reserved for release candidates
 set(LWIP_VERSION_RC       "LWIP_RC_DEVELOPMENT")
 
-set(LWIP_VERSION_STRING
-    "${LWIP_VERSION_MAJOR}.${LWIP_VERSION_MINOR}.${LWIP_VERSION_REVISION}"
-)
+if ("${LWIP_VERSION_RC}" STREQUAL "LWIP_RC_RELEASE")
+    set(LWIP_VERSION_STRING
+        "${LWIP_VERSION_MAJOR}.${LWIP_VERSION_MINOR}.${LWIP_VERSION_REVISION}"
+    )
+elseif ("${LWIP_VERSION_RC}" STREQUAL "LWIP_RC_DEVELOPMENT")
+    set(LWIP_VERSION_STRING
+        "${LWIP_VERSION_MAJOR}.${LWIP_VERSION_MINOR}.${LWIP_VERSION_REVISION}.dev"
+    )
+else()
+    set(LWIP_VERSION_STRING
+        "${LWIP_VERSION_MAJOR}.${LWIP_VERSION_MINOR}.${LWIP_VERSION_REVISION}.rc${LWIP_VERSION_RC}"
+    )
+endif()
 
 # The minimum set of files needed for lwIP.
 set(lwipcore_SRCS
@@ -43,6 +58,7 @@ set(lwipcore_SRCS
     ${LWIP_DIR}/src/core/udp.c
 )
 set(lwipcore4_SRCS
+    ${LWIP_DIR}/src/core/ipv4/acd.c
     ${LWIP_DIR}/src/core/ipv4/autoip.c
     ${LWIP_DIR}/src/core/ipv4/dhcp.c
     ${LWIP_DIR}/src/core/ipv4/etharp.c
@@ -192,7 +208,7 @@ set(lwipnetbios_SRCS
 
 # TFTP server files
 set(lwiptftp_SRCS
-    ${LWIP_DIR}/src/apps/tftp/tftp_server.c
+    ${LWIP_DIR}/src/apps/tftp/tftp.c
 )
 
 # MQTT client files
@@ -236,23 +252,33 @@ set(lwipallapps_SRCS
 configure_file(${LWIP_DIR}/src/include/lwip/init.h.cmake.in ${LWIP_DIR}/src/include/lwip/init.h)
 
 # Documentation
+set(DOXYGEN_DIR ${LWIP_DIR}/doc/doxygen)
+set(DOXYGEN_OUTPUT_DIR output)
 set(DOXYGEN_IN  ${LWIP_DIR}/doc/doxygen/lwip.Doxyfile.cmake.in)
 set(DOXYGEN_OUT ${LWIP_DIR}/doc/doxygen/lwip.Doxyfile)
 configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT})
 
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
-    message("Doxygen build started")
-    # note the option ALL which allows to build the docs together with the application
-    add_custom_target(lwipdocs EXCLUDE_FROM_ALL
+    message(STATUS "Doxygen build started")
+
+    add_custom_target(lwipdocs
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOXYGEN_DIR}/${DOXYGEN_OUTPUT_DIR}/html
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-        WORKING_DIRECTORY ${LWIP_DIR}/doc/doxygen
+        WORKING_DIRECTORY ${DOXYGEN_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM)
 else (DOXYGEN_FOUND)
-    message("Doxygen needs to be installed to generate the doxygen documentation")
+    message(STATUS "Doxygen needs to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
 # lwIP libraries
 add_library(lwipcore EXCLUDE_FROM_ALL ${lwipnoapps_SRCS})
+target_compile_options(lwipcore PRIVATE ${LWIP_COMPILER_FLAGS})
+target_compile_definitions(lwipcore PRIVATE ${LWIP_DEFINITIONS}  ${LWIP_MBEDTLS_DEFINITIONS})
+target_include_directories(lwipcore PRIVATE ${LWIP_INCLUDE_DIRS} ${LWIP_MBEDTLS_INCLUDE_DIRS})
+
 add_library(lwipallapps EXCLUDE_FROM_ALL ${lwipallapps_SRCS})
+target_compile_options(lwipallapps PRIVATE ${LWIP_COMPILER_FLAGS})
+target_compile_definitions(lwipallapps PRIVATE ${LWIP_DEFINITIONS}  ${LWIP_MBEDTLS_DEFINITIONS})
+target_include_directories(lwipallapps PRIVATE ${LWIP_INCLUDE_DIRS} ${LWIP_MBEDTLS_INCLUDE_DIRS})

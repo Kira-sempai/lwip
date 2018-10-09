@@ -277,7 +277,7 @@
  * default values in pcbs struct are well initialized in all conditions.
  */
 #if !defined MEMP_MEM_INIT || defined __DOXYGEN__
-#define MEMP_MEM_INIT                 0
+#define MEMP_MEM_INIT                   0
 #endif
 
 /**
@@ -854,7 +854,7 @@
  * ICMP_TTL: Default value for Time-To-Live used by ICMP packets.
  */
 #if !defined ICMP_TTL || defined __DOXYGEN__
-#define ICMP_TTL                       (IP_DEFAULT_TTL)
+#define ICMP_TTL                        IP_DEFAULT_TTL
 #endif
 
 /**
@@ -895,7 +895,7 @@
  * LWIP_RAW==1: Enable application layer to hook into the IP layer itself.
  */
 #if !defined RAW_TTL || defined __DOXYGEN__
-#define RAW_TTL                        (IP_DEFAULT_TTL)
+#define RAW_TTL                         IP_DEFAULT_TTL
 #endif
 /**
  * @}
@@ -924,20 +924,10 @@
 #endif /* !LWIP_IPV4 */
 
 /**
- * DHCP_DOES_ARP_CHECK==1: Do an ARP check on the offered address.
+ * LWIP_DHCP_DOES_ACD_CHECK==1: Perform address conflict detection on the dhcp address.
  */
-#if !defined DHCP_DOES_ARP_CHECK || defined __DOXYGEN__
-#define DHCP_DOES_ARP_CHECK             ((LWIP_DHCP) && (LWIP_ARP))
-#endif
-
-/**
- * LWIP_DHCP_CHECK_LINK_UP==1: dhcp_start() only really starts if the netif has
- * NETIF_FLAG_LINK_UP set in its flags. As this is only an optimization and
- * netif drivers might not set this flag, the default is off. If enabled,
- * netif_set_link_up() must be called to continue dhcp starting.
- */
-#if !defined LWIP_DHCP_CHECK_LINK_UP
-#define LWIP_DHCP_CHECK_LINK_UP         0
+#if !defined LWIP_DHCP_DOES_ACD_CHECK || defined __DOXYGEN__
+#define LWIP_DHCP_DOES_ACD_CHECK        LWIP_DHCP
 #endif
 
 /**
@@ -1015,6 +1005,31 @@
 #if !defined LWIP_DHCP_AUTOIP_COOP_TRIES || defined __DOXYGEN__
 #define LWIP_DHCP_AUTOIP_COOP_TRIES     9
 #endif
+/**
+ * @}
+ */
+
+/*
+   ------------------------------------
+   ----------- ACD options ------------
+   ------------------------------------
+*/
+/**
+ * @defgroup lwip_opts_acd ACD
+ * @ingroup lwip_opts_ipv4
+ * @{
+ */
+ /**
+  * LWIP_ACD==1: Enable ACD module. ACD module is needed when using AUTOIP.
+  */
+#if !defined LWIP_ACD || defined __DOXYGEN__
+#define LWIP_ACD                     (LWIP_AUTOIP || LWIP_DHCP_DOES_ACD_CHECK)
+#endif
+#if !LWIP_IPV4
+/* disable ACD when IPv4 is disabled */
+#undef LWIP_ACD
+#define LWIP_ACD                     0
+#endif /* !LWIP_IPV4 */
 /**
  * @}
  */
@@ -1125,7 +1140,7 @@
 
 /** DNS maximum number of retries when asking for a name, before "timeout". */
 #if !defined DNS_MAX_RETRIES || defined __DOXYGEN__
-#define DNS_MAX_RETRIES           4
+#define DNS_MAX_RETRIES                 4
 #endif
 
 /** DNS do a name checking between the query and the response. */
@@ -1167,7 +1182,7 @@
 /** Set this to 1 to enable querying ".local" names via mDNS
  *  using a One-Shot Multicast DNS Query */
 #if !defined LWIP_DNS_SUPPORT_MDNS_QUERIES || defined __DOXYGEN__
-#define LWIP_DNS_SUPPORT_MDNS_QUERIES  0
+#define LWIP_DNS_SUPPORT_MDNS_QUERIES   0
 #endif
 /**
  * @}
@@ -1201,7 +1216,7 @@
  * UDP_TTL: Default Time-To-Live value.
  */
 #if !defined UDP_TTL || defined __DOXYGEN__
-#define UDP_TTL                         (IP_DEFAULT_TTL)
+#define UDP_TTL                         IP_DEFAULT_TTL
 #endif
 
 /**
@@ -1235,7 +1250,7 @@
  * TCP_TTL: Default Time-To-Live value.
  */
 #if !defined TCP_TTL || defined __DOXYGEN__
-#define TCP_TTL                         (IP_DEFAULT_TTL)
+#define TCP_TTL                         IP_DEFAULT_TTL
 #endif
 
 /**
@@ -1268,7 +1283,7 @@
  * Define to 0 if your device is low on memory.
  */
 #if !defined TCP_QUEUE_OOSEQ || defined __DOXYGEN__
-#define TCP_QUEUE_OOSEQ                 (LWIP_TCP)
+#define TCP_QUEUE_OOSEQ                 LWIP_TCP
 #endif
 
 /**
@@ -1367,7 +1382,7 @@
  */
 #if !defined TCP_OOSEQ_BYTES_LIMIT
 #if TCP_OOSEQ_MAX_BYTES
-#define TCP_OOSEQ_BYTES_LIMIT(pcb) TCP_OOSEQ_MAX_BYTES
+#define TCP_OOSEQ_BYTES_LIMIT(pcb)      TCP_OOSEQ_MAX_BYTES
 #elif defined __DOXYGEN__
 #define TCP_OOSEQ_BYTES_LIMIT(pcb)
 #endif
@@ -1390,7 +1405,7 @@
  */
 #if !defined TCP_OOSEQ_PBUFS_LIMIT
 #if TCP_OOSEQ_MAX_PBUFS
-#define TCP_OOSEQ_PBUFS_LIMIT(pcb) TCP_OOSEQ_MAX_PBUFS
+#define TCP_OOSEQ_PBUFS_LIMIT(pcb)      TCP_OOSEQ_MAX_PBUFS
 #elif defined __DOXYGEN__
 #define TCP_OOSEQ_PBUFS_LIMIT(pcb)
 #endif
@@ -1445,7 +1460,7 @@
  * explicit window update
  */
 #if !defined TCP_WND_UPDATE_THRESHOLD || defined __DOXYGEN__
-#define TCP_WND_UPDATE_THRESHOLD   LWIP_MIN((TCP_WND / 4), (TCP_MSS * 4))
+#define TCP_WND_UPDATE_THRESHOLD        LWIP_MIN((TCP_WND / 4), (TCP_MSS * 4))
 #endif
 
 /**
@@ -1489,15 +1504,19 @@
 #define LWIP_TCP_PCB_NUM_EXT_ARGS       0
 #endif
 
-/** LWIP_ALTCP==1: enable the altcp API
+/** LWIP_ALTCP==1: enable the altcp API.
  * altcp is an abstraction layer that prevents applications linking against the
  * tcp.h functions but provides the same functionality. It is used to e.g. add
  * SSL/TLS or proxy-connect support to an application written for the tcp callback
  * API without that application knowing the protocol details.
- * Applications written against the altcp API are directly linked against the
- * tcp callback API for LWIP_ALTCP==0, but then cannot use layered protocols.
+ *
+ * With LWIP_ALTCP==0, applications written against the altcp API can still be
+ * compiled but are directly linked against the tcp.h callback API and then
+ * cannot use layered protocols.
+ *
+ * See @ref altcp_api
  */
-#ifndef LWIP_ALTCP
+#if !defined LWIP_ALTCP || defined __DOXYGEN__
 #define LWIP_ALTCP                      0
 #endif
 
@@ -1506,7 +1525,7 @@
  * A port to ARM mbedtls is provided with lwIP, see apps/altcp_tls/ directory
  * and LWIP_ALTCP_TLS_MBEDTLS option.
  */
-#ifndef LWIP_ALTCP_TLS
+#if !defined LWIP_ALTCP_TLS || defined __DOXYGEN__
 #define LWIP_ALTCP_TLS                  0
 #endif
 
@@ -1558,8 +1577,8 @@
  * LWIP_PBUF_REF_T: Refcount type in pbuf.
  * Default width of u8_t can be increased if 255 refs are not enough for you.
  */
-#ifndef LWIP_PBUF_REF_T
-#define LWIP_PBUF_REF_T u8_t
+#if !defined LWIP_PBUF_REF_T || defined __DOXYGEN__
+#define LWIP_PBUF_REF_T                 u8_t
 #endif
 /**
  * @}
@@ -1661,7 +1680,7 @@
  *   }
  */
 #if !defined LWIP_NETIF_TX_SINGLE_PBUF || defined __DOXYGEN__
-#define LWIP_NETIF_TX_SINGLE_PBUF             0
+#define LWIP_NETIF_TX_SINGLE_PBUF       0
 #endif /* LWIP_NETIF_TX_SINGLE_PBUF */
 
 /**
@@ -1669,7 +1688,7 @@
  * data in client_data member array of struct netif (max. 256).
  */
 #if !defined LWIP_NUM_NETIF_CLIENT_DATA || defined __DOXYGEN__
-#define LWIP_NUM_NETIF_CLIENT_DATA            0
+#define LWIP_NUM_NETIF_CLIENT_DATA      0
 #endif
 /**
  * @}
@@ -1698,7 +1717,7 @@
  * LWIP_LOOPIF_MULTICAST==1: Support multicast/IGMP on loop interface (127.0.0.1).
  */
 #if !defined LWIP_LOOPIF_MULTICAST || defined __DOXYGEN__
-#define LWIP_LOOPIF_MULTICAST               0
+#define LWIP_LOOPIF_MULTICAST           0
 #endif
 
 /**
@@ -1751,7 +1770,7 @@
  * TCPIP_THREAD_NAME: The name assigned to the main tcpip thread.
  */
 #if !defined TCPIP_THREAD_NAME || defined __DOXYGEN__
-#define TCPIP_THREAD_NAME              "tcpip_thread"
+#define TCPIP_THREAD_NAME               "tcpip_thread"
 #endif
 
 /**
@@ -1793,7 +1812,7 @@
  * SLIPIF_THREAD_NAME: The name assigned to the slipif_loop thread.
  */
 #if !defined SLIPIF_THREAD_NAME || defined __DOXYGEN__
-#define SLIPIF_THREAD_NAME             "slipif_loop"
+#define SLIPIF_THREAD_NAME              "slipif_loop"
 #endif
 
 /**
@@ -1818,7 +1837,7 @@
  * DEFAULT_THREAD_NAME: The name assigned to any other lwIP thread.
  */
 #if !defined DEFAULT_THREAD_NAME || defined __DOXYGEN__
-#define DEFAULT_THREAD_NAME            "lwIP"
+#define DEFAULT_THREAD_NAME             "lwIP"
 #endif
 
 /**
@@ -2392,6 +2411,18 @@
  * LWIP_IPV6_SCOPES==1: Enable support for IPv6 address scopes, ensuring that
  * e.g. link-local addresses are really treated as link-local. Disable this
  * setting only for single-interface configurations.
+ * All addresses that have a scope according to the default policy (link-local
+ * unicast addresses, interface-local and link-local multicast addresses) should
+ * now have a zone set on them before being passed to the core API, although
+ * lwIP will currently attempt to select a zone on the caller's behalf when 
+ * necessary. Applications that directly assign IPv6 addresses to interfaces
+ * (which is NOT recommended) must now ensure that link-local addresses carry
+ * the netif's zone. See the new ip6_zone.h header file for more information and
+ * relevant macros. For now it is still possible to turn off scopes support
+ * through the new LWIP_IPV6_SCOPES option. When upgrading an implementation that
+ * uses the core API directly, it is highly recommended to enable
+ * LWIP_IPV6_SCOPES_DEBUG at least for a while, to ensure e.g. proper address
+ * initialization.
  */
 #if !defined LWIP_IPV6_SCOPES || defined __DOXYGEN__
 #define LWIP_IPV6_SCOPES                (LWIP_IPV6 && !LWIP_SINGLE_NETIF)
@@ -2432,7 +2463,7 @@
  * LWIP_IPV6_REASS==1: reassemble incoming IPv6 packets that fragmented
  */
 #if !defined LWIP_IPV6_REASS || defined __DOXYGEN__
-#define LWIP_IPV6_REASS                 (LWIP_IPV6)
+#define LWIP_IPV6_REASS                 LWIP_IPV6
 #endif
 
 /**
@@ -2447,7 +2478,7 @@
  * LWIP_IPV6_AUTOCONFIG==1: Enable stateless address autoconfiguration as per RFC 4862.
  */
 #if !defined LWIP_IPV6_AUTOCONFIG || defined __DOXYGEN__
-#define LWIP_IPV6_AUTOCONFIG            (LWIP_IPV6)
+#define LWIP_IPV6_AUTOCONFIG            LWIP_IPV6
 #endif
 
 /**
@@ -2458,7 +2489,7 @@
  * If this option is disabled, all addresses are assumed to be static.
  */
 #if !defined LWIP_IPV6_ADDRESS_LIFETIMES || defined __DOXYGEN__
-#define LWIP_IPV6_ADDRESS_LIFETIMES     (LWIP_IPV6_AUTOCONFIG)
+#define LWIP_IPV6_ADDRESS_LIFETIMES     LWIP_IPV6_AUTOCONFIG
 #endif
 
 /**
@@ -2480,7 +2511,7 @@
  * LWIP_ICMP6==1: Enable ICMPv6 (mandatory per RFC)
  */
 #if !defined LWIP_ICMP6 || defined __DOXYGEN__
-#define LWIP_ICMP6                      (LWIP_IPV6)
+#define LWIP_ICMP6                      LWIP_IPV6
 #endif
 
 /**
@@ -2512,7 +2543,7 @@
  * indiscriminately pass all inbound IPv6 multicast traffic to lwIP.
  */
 #if !defined LWIP_IPV6_MLD || defined __DOXYGEN__
-#define LWIP_IPV6_MLD                   (LWIP_IPV6)
+#define LWIP_IPV6_MLD                   LWIP_IPV6
 #endif
 
 /**
@@ -2538,7 +2569,7 @@
  * is being resolved.
  */
 #if !defined LWIP_ND6_QUEUEING || defined __DOXYGEN__
-#define LWIP_ND6_QUEUEING               (LWIP_IPV6)
+#define LWIP_ND6_QUEUEING               LWIP_IPV6
 #endif
 
 /**
@@ -3456,6 +3487,13 @@
  */
 #if !defined AUTOIP_DEBUG || defined __DOXYGEN__
 #define AUTOIP_DEBUG                    LWIP_DBG_OFF
+#endif
+
+/**
+ * ACD_DEBUG: Enable debugging in acd.c.
+ */
+#if !defined ACD_DEBUG || defined __DOXYGEN__
+#define ACD_DEBUG                       LWIP_DBG_OFF
 #endif
 
 /**

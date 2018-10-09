@@ -230,7 +230,7 @@ struct lwip_socket_multicast_pair {
   ip4_addr_t multi_addr;
 };
 
-struct lwip_socket_multicast_pair socket_ipv4_multicast_memberships[LWIP_SOCKET_MAX_MEMBERSHIPS];
+static struct lwip_socket_multicast_pair socket_ipv4_multicast_memberships[LWIP_SOCKET_MAX_MEMBERSHIPS];
 
 static int  lwip_socket_register_membership(int s, const ip4_addr_t *if_addr, const ip4_addr_t *multi_addr);
 static void lwip_socket_unregister_membership(int s, const ip4_addr_t *if_addr, const ip4_addr_t *multi_addr);
@@ -249,7 +249,7 @@ struct lwip_socket_multicast_mld6_pair {
   ip6_addr_t multi_addr;
 };
 
-struct lwip_socket_multicast_mld6_pair socket_ipv6_multicast_memberships[LWIP_SOCKET_MAX_MEMBERSHIPS];
+static struct lwip_socket_multicast_mld6_pair socket_ipv6_multicast_memberships[LWIP_SOCKET_MAX_MEMBERSHIPS];
 
 static int  lwip_socket_register_mld6_membership(int s, unsigned int if_idx, const ip6_addr_t *multi_addr);
 static void lwip_socket_unregister_mld6_membership(int s, unsigned int if_idx, const ip6_addr_t *multi_addr);
@@ -522,14 +522,14 @@ alloc_socket(struct netconn *newconn, int accepted)
          after having marked it as used. */
       SYS_ARCH_UNPROTECT(lev);
       sockets[i].lastdata.pbuf = NULL;
-#if LWIP_SOCKET_SELECT
+#if LWIP_SOCKET_SELECT || LWIP_SOCKET_POLL
       LWIP_ASSERT("sockets[i].select_waiting == 0", sockets[i].select_waiting == 0);
       sockets[i].rcvevent   = 0;
       /* TCP sendbuf is empty, but the socket is not yet writable until connected
        * (unless it has been created by accept()). */
       sockets[i].sendevent  = (NETCONNTYPE_GROUP(newconn->type) == NETCONN_TCP ? (accepted != 0) : 1);
       sockets[i].errevent   = 0;
-#endif /* LWIP_SOCKET_SELECT */
+#endif /* LWIP_SOCKET_SELECT || LWIP_SOCKET_POLL */
       return i + LWIP_SOCKET_OFFSET;
     }
     SYS_ARCH_UNPROTECT(lev);
