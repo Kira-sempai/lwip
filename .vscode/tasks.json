@@ -5,43 +5,50 @@
     "tasks": [
         {
             "label": "Build example_app",
-            "identifier": "build",
             "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
             "problemMatcher": "$gcc",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
+            "command": "cmake --build ."
+        },
+        {
+            "label": "Build unit tests",
+            "type": "shell",
+            "problemMatcher": "$gcc",
+            "group": "build",
             "linux": {
-                "command": "cd ${workspaceFolder}/build && cmake --build ."
+                "options": {
+                    "cwd": "${workspaceFolder}/contrib/ports/unix/check/build"
+                },
             },
             "windows": {
-                "command": "cd ${workspaceFolder}/build; cmake --build ."
-            }
+                "options": {
+                    "cwd": "${workspaceFolder}/contrib/ports/win32/check/build"
+                },
+            },
+            "command": "cmake --build ."
         },
         {
             "label": "Configure example_app",
             "type": "shell",
             "problemMatcher": "$gcc",
             "group": "build",
-            "linux": {
-                "command": "cd ${workspaceFolder} && mkdir build && cd build && cmake .."
-            },
-            "windows": {
-                "command": "cd ${workspaceFolder}; mkdir build; cd build;  cmake .."
-            }
+            "command": "cd ${workspaceFolder}; mkdir build; cd build; cmake .."
         },
         {
             "label": "Generate documentation",
             "type": "shell",
             "problemMatcher": [],
             "group": "none",
-            "linux": {
-                "command": "cd ${workspaceFolder}/build && cmake --build . --target lwipdocs"
+            "options": {
+                "cwd": "${workspaceFolder}/build"
             },
-            "windows": {
-                "command": "cd ${workspaceFolder}/build; cmake --build . --target lwipdocs"
-            },
+            "command": "cmake --build . --target lwipdocs"
         }
     ]
 }

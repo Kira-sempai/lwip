@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.10)
 
 project(lwIP)
 
@@ -25,7 +25,9 @@ set(CPACK_SOURCE_IGNORE_FILES "/build/;${CPACK_SOURCE_IGNORE_FILES};.git")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "lwip-${LWIP_VERSION_MAJOR}.${LWIP_VERSION_MINOR}.${LWIP_VERSION_REVISION}")
 include(CPack)
 
-# Target for package generation
+# Generate docs before creating source package
 include(src/Filelists.cmake)
 add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
-add_dependencies(dist lwipdocs)
+if (TARGET lwipdocs)
+  add_dependencies(dist lwipdocs)
+endif()

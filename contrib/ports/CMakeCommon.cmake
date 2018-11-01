@@ -1,4 +1,6 @@
-include_guard(GLOBAL)
+if(NOT ${CMAKE_VERSION} VERSION_LESS "3.10.0")
+    include_guard(GLOBAL)
+endif()
 
 set(LWIP_CONTRIB_DIR ${LWIP_DIR}/contrib)
 
@@ -38,7 +40,8 @@ set(LWIP_COMPILER_FLAGS_GNU_CLANG
     -Wparentheses
     -Wsequence-point
     -Wswitch-default
-    -Wextra -Wundef
+    -Wextra
+    -Wundef
     -Wshadow
     -Wpointer-arith
     -Wcast-qual

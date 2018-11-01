@@ -8,9 +8,9 @@
 # The intention is to provide greater flexibility to users to
 # create their own targets using the *_SRCS variables.
 
-include_guard(GLOBAL)
-
-include(${LWIP_DIR}/contrib/ports/CMakeCommon.cmake)
+if(NOT ${CMAKE_VERSION} VERSION_LESS "3.10.0")
+    include_guard(GLOBAL)
+endif()
 
 set(lwipcontribexamples_SRCS
     ${LWIP_CONTRIB_DIR}/examples/httpd/fs_example/fs_example.c
