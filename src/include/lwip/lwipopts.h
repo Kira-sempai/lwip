@@ -146,6 +146,10 @@ extern signed long memused;
 
 #define LWIP_HOOK_FILENAME <lwip/lwip_hooks.h>
 
+/**
+ * LWIP_DHCP_DOES_ACD_CHECK==1: Perform address conflict detection on the dhcp address.
+ */
+#define LWIP_DHCP_DOES_ACD_CHECK        0
 
 #define FS_FILE_EXTENSION_T_DEFINED
 typedef struct fs_pextension fs_file_extension;
