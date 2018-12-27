@@ -76,6 +76,7 @@
 #include "mbedtls/platform.h"
 #include "mbedtls/memory_buffer_alloc.h"
 #include "mbedtls/ssl_cache.h"
+#include "mbedtls/ssl_ticket.h"
 
 #include "mbedtls/ssl_internal.h" /* to call mbedtls_flush_output after ERR_MEM */
 
@@ -99,10 +100,17 @@ struct altcp_tls_config {
   mbedtls_ctr_drbg_context ctr_drbg;
   mbedtls_x509_crt *cert;
   mbedtls_pk_context *pkey;
+  uint8_t cert_count;
+  uint8_t cert_max;
+  uint8_t pkey_count;
+  uint8_t pkey_max;
   mbedtls_x509_crt *ca;
-#if defined(MBEDTLS_SSL_CACHE_C) && ALTCP_MBEDTLS_SESSION_CACHE_TIMEOUT_SECONDS
+#if defined(MBEDTLS_SSL_CACHE_C) && ALTCP_MBEDTLS_USE_SESSION_CACHE
   /** Inter-connection cache for fast connection startup */
   struct mbedtls_ssl_cache_context cache;
+#endif
+#if defined(MBEDTLS_SSL_SESSION_TICKETS) && ALTCP_MBEDTLS_USE_SESSION_TICKETS
+  mbedtls_ssl_ticket_context ticket_ctx;
 #endif
 };
 
@@ -634,16 +642,18 @@ altcp_tls_context(struct altcp_pcb *conn)
   return NULL;
 }
 
-#if ALTCP_MBEDTLS_DEBUG != LWIP_DBG_OFF
+#if ALTCP_MBEDTLS_LIB_DEBUG != LWIP_DBG_OFF
 static void
 altcp_mbedtls_debug(void *ctx, int level, const char *file, int line, const char *str)
 {
-  LWIP_UNUSED_ARG(str);
-  LWIP_UNUSED_ARG(level);
+  LWIP_UNUSED_ARG(ctx);
   LWIP_UNUSED_ARG(file);
   LWIP_UNUSED_ARG(line);
-  LWIP_UNUSED_ARG(ctx);
-  /* @todo: output debug string :-) */
+  LWIP_UNUSED_ARG(str);
+
+  if (level >= ALTCP_MBEDTLS_LIB_DEBUG_LEVEL_MIN) {
+    LWIP_DEBUGF(ALTCP_MBEDTLS_LIB_DEBUG, ("%s:%04d: %s", file, line, str));
+  }
 }
 #endif
 
@@ -651,7 +661,7 @@ altcp_mbedtls_debug(void *ctx, int level, const char *file, int line, const char
  * ATTENTION: Server certificate and private key have to be added outside this function!
  */
 static struct altcp_tls_config *
-altcp_tls_create_config(int is_server, int have_cert, int have_pkey, int have_ca)
+altcp_tls_create_config(int is_server, uint8_t cert_count, uint8_t pkey_count, int have_ca)
 {
   size_t sz;
   int ret;
@@ -666,30 +676,32 @@ altcp_tls_create_config(int is_server, int have_cert, int have_pkey, int have_ca
   altcp_mbedtls_mem_init();
 
   sz = sizeof(struct altcp_tls_config);
-  if (have_cert) {
-    sz += sizeof(mbedtls_x509_crt);
+  if (cert_count > 0) {
+    sz += (cert_count * sizeof(mbedtls_x509_crt));
   }
   if (have_ca) {
     sz += sizeof(mbedtls_x509_crt);
   }
-  if (have_pkey) {
-    sz += sizeof(mbedtls_pk_context);
+  if (pkey_count > 0) {
+    sz += (pkey_count * sizeof(mbedtls_pk_context));
   }
 
   conf = (struct altcp_tls_config *)altcp_mbedtls_alloc_config(sz);
   if (conf == NULL) {
     return NULL;
   }
+  conf->cert_max = cert_count;
   mem = (mbedtls_x509_crt *)(conf + 1);
-  if (have_cert) {
+  if (cert_count > 0) {
     conf->cert = mem;
-    mem++;
+    mem += cert_count;
   }
   if (have_ca) {
     conf->ca = mem;
     mem++;
   }
-  if (have_pkey) {
+  conf->pkey_max = pkey_count;
+  if (pkey_count > 0) {
     conf->pkey = (mbedtls_pk_context *)mem;
   }
 
@@ -716,16 +728,92 @@ altcp_tls_create_config(int is_server, int have_cert, int have_pkey, int have_ca
   mbedtls_ssl_conf_authmode(&conf->conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
 
   mbedtls_ssl_conf_rng(&conf->conf, mbedtls_ctr_drbg_random, &conf->ctr_drbg);
-#if ALTCP_MBEDTLS_DEBUG != LWIP_DBG_OFF
+#if ALTCP_MBEDTLS_LIB_DEBUG != LWIP_DBG_OFF
   mbedtls_ssl_conf_dbg(&conf->conf, altcp_mbedtls_debug, stdout);
 #endif
-#if defined(MBEDTLS_SSL_CACHE_C) && ALTCP_MBEDTLS_SESSION_CACHE_TIMEOUT_SECONDS
+#if defined(MBEDTLS_SSL_CACHE_C) && ALTCP_MBEDTLS_USE_SESSION_CACHE
   mbedtls_ssl_conf_session_cache(&conf->conf, &conf->cache, mbedtls_ssl_cache_get, mbedtls_ssl_cache_set);
-  mbedtls_ssl_cache_set_timeout(&conf->cache, 30);
-  mbedtls_ssl_cache_set_max_entries(&conf->cache, 30);
+  mbedtls_ssl_cache_set_timeout(&conf->cache, ALTCP_MBEDTLS_SESSION_CACHE_TIMEOUT_SECONDS);
+  mbedtls_ssl_cache_set_max_entries(&conf->cache, ALTCP_MBEDTLS_SESSION_CACHE_SIZE);
 #endif
 
+#if defined(MBEDTLS_SSL_SESSION_TICKETS) && ALTCP_MBEDTLS_USE_SESSION_TICKETS
+  mbedtls_ssl_ticket_init(&conf->ticket_ctx);
+
+  ret = mbedtls_ssl_ticket_setup(&conf->ticket_ctx, mbedtls_ctr_drbg_random, &conf->ctr_drbg,
+    ALTCP_MBEDTLS_SESSION_TICKET_CIPHER, ALTCP_MBEDTLS_SESSION_TICKET_TIMEOUT_SECONDS);
+  if (ret) {
+    LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_ssl_ticket_setup failed: %d\n", ret));
+    altcp_mbedtls_free_config(conf);
+    return NULL;
+  }
+
+  mbedtls_ssl_conf_session_tickets_cb(&conf->conf, mbedtls_ssl_ticket_write, mbedtls_ssl_ticket_parse,
+    &conf->ticket_ctx);
+#endif
+
+
   return conf;
+}
+
+struct altcp_tls_config *altcp_tls_create_config_server(uint8_t cert_count)
+{
+  struct altcp_tls_config *conf = altcp_tls_create_config(1, cert_count, cert_count, 0);
+  if (conf == NULL) {
+    return NULL;
+  }
+
+  mbedtls_ssl_conf_ca_chain(&conf->conf, NULL, NULL);
+  return conf;
+}
+
+err_t altcp_tls_config_server_add_privkey_cert(struct altcp_tls_config *config,
+      const u8_t *privkey, size_t privkey_len,
+      const u8_t *privkey_pass, size_t privkey_pass_len,
+      const u8_t *cert, size_t cert_len)
+{
+  int ret;
+  mbedtls_x509_crt *srvcert;
+  mbedtls_pk_context *pkey;
+
+  if (config->cert_count >= config->cert_max) {
+    return ERR_MEM;
+  }
+  if (config->pkey_count >= config->pkey_max) {
+    return ERR_MEM;
+  }
+
+  srvcert = config->cert + config->cert_count;
+  mbedtls_x509_crt_init(srvcert);
+
+  pkey = config->pkey + config->pkey_count;
+  mbedtls_pk_init(pkey);
+
+  /* Load the certificates and private key */
+  ret = mbedtls_x509_crt_parse(srvcert, cert, cert_len);
+  if (ret != 0) {
+    LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_x509_crt_parse failed: %d\n", ret));
+    return ERR_VAL;
+  }
+
+  ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len);
+  if (ret != 0) {
+    LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_pk_parse_public_key failed: %d\n", ret));
+    mbedtls_x509_crt_free(srvcert);
+    return ERR_VAL;
+  }
+
+  ret = mbedtls_ssl_conf_own_cert(&config->conf, srvcert, pkey);
+  if (ret != 0) {
+    LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_ssl_conf_own_cert failed: %d\n", ret));
+    mbedtls_x509_crt_free(srvcert);
+    mbedtls_pk_free(pkey);
+    return ERR_VAL;
+  }
+
+  config->cert_count++;
+  config->pkey_count++;
+  return ERR_OK;
 }
 
 /** Create new TLS configuration
@@ -737,45 +825,17 @@ altcp_tls_create_config_server_privkey_cert(const u8_t *privkey, size_t privkey_
     const u8_t *privkey_pass, size_t privkey_pass_len,
     const u8_t *cert, size_t cert_len)
 {
-  int ret;
-  mbedtls_x509_crt *srvcert;
-  mbedtls_pk_context *pkey;
-  struct altcp_tls_config *conf = altcp_tls_create_config(1, 1, 1, 0);
+  struct altcp_tls_config *conf = altcp_tls_create_config_server(1);
   if (conf == NULL) {
     return NULL;
   }
 
-  srvcert = conf->cert;
-  mbedtls_x509_crt_init(srvcert);
-
-  pkey = conf->pkey;
-  mbedtls_pk_init(pkey);
-
-  /* Load the certificates and private key */
-  ret = mbedtls_x509_crt_parse(srvcert, cert, cert_len);
-  if (ret != 0) {
-    LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_x509_crt_parse failed: %d\n", ret));
+  if (altcp_tls_config_server_add_privkey_cert(conf, privkey, privkey_len,
+    privkey_pass, privkey_pass_len, cert, cert_len) != ERR_OK) {
     altcp_mbedtls_free_config(conf);
     return NULL;
   }
 
-  ret = mbedtls_pk_parse_key(pkey, (const unsigned char *) privkey, privkey_len, privkey_pass, privkey_pass_len);
-  if (ret != 0) {
-    LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_pk_parse_public_key failed: %d\n", ret));
-    mbedtls_x509_crt_free(srvcert);
-    altcp_mbedtls_free_config(conf);
-    return NULL;
-  }
-
-  mbedtls_ssl_conf_ca_chain(&conf->conf, srvcert->next, NULL);
-  ret = mbedtls_ssl_conf_own_cert(&conf->conf, srvcert, pkey);
-  if (ret != 0) {
-    LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG, ("mbedtls_ssl_conf_own_cert failed: %d\n", ret));
-    mbedtls_x509_crt_free(srvcert);
-    mbedtls_pk_free(pkey);
-    altcp_mbedtls_free_config(conf);
-    return NULL;
-  }
   return conf;
 }
 
@@ -783,7 +843,7 @@ static struct altcp_tls_config *
 altcp_tls_create_config_client_common(const u8_t *ca, size_t ca_len, int is_2wayauth)
 {
   int ret;
-  struct altcp_tls_config *conf = altcp_tls_create_config(0, is_2wayauth, is_2wayauth, ca != NULL);
+  struct altcp_tls_config *conf = altcp_tls_create_config(0, (is_2wayauth) ? 1 : 0, (is_2wayauth) ? 1 : 0, ca != NULL);
   if (conf == NULL) {
     return NULL;
   }
@@ -925,6 +985,11 @@ altcp_mbedtls_listen(struct altcp_pcb *conn, u8_t backlog, err_t *err)
   }
   lpcb = altcp_listen_with_backlog_and_err(conn->inner_conn, backlog, err);
   if (lpcb != NULL) {
+    altcp_mbedtls_state_t *state = (altcp_mbedtls_state_t *)conn->state;
+    /* Free members of the ssl context (not used on listening pcb). This
+       includes freeing input/output buffers, so saves ~32KByte by default */
+    mbedtls_ssl_free(&state->ssl_context);
+
     conn->inner_conn = lpcb;
     altcp_accept(lpcb, altcp_mbedtls_lower_accept);
     return conn;
