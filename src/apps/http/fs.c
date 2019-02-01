@@ -70,6 +70,10 @@ fs_open(struct fs_file *file, const char *name)
   file->is_custom_file = 0;
 #endif /* LWIP_HTTPD_CUSTOM_FILES */
 
+  if (FS_ROOT == NULL) {
+	  return ERR_VAL;
+  }
+
   for (f = FS_ROOT; f != NULL; f = f->next) {
     if (!strcmp(name, (const char *)f->name)) {
       file->data = (const char *)f->data;
