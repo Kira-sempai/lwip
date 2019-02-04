@@ -473,7 +473,7 @@ netif_do_set_ipaddr(struct netif *netif, const ip4_addr_t *ipaddr, ip_addr_t *ol
   /* address is actually being changed? */
   if (ip4_addr_cmp(ipaddr, netif_ip4_addr(netif)) == 0) {
     ip_addr_t new_addr;
-    *ip_2_ip4(&new_addr) = *ipaddr;
+    *ip_2_ip4(&new_addr) = *ipaddr; //-V595
     IP_SET_TYPE_VAL(new_addr, IPADDR_TYPE_V4);
 
     ip_addr_copy(*old_addr, *netif_ip_addr4(netif));

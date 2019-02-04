@@ -1176,7 +1176,7 @@ dns_correct_response(u8_t idx, u32_t ttl)
        transaction in progress, and should not be cached."
        -> flush this entry now */
     /* entry reused during callback? */
-    if (entry->state == DNS_STATE_DONE) {
+    if (entry->state == DNS_STATE_DONE) { //-V547
       entry->state = DNS_STATE_UNUSED;
     }
   }
