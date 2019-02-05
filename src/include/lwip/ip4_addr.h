@@ -180,7 +180,7 @@ u8_t ip4_addr_netmask_valid(u32_t netmask);
 #define ip4_addr4(ipaddr) ip4_addr_get_byte(ipaddr, 3)
 /* Get one byte from the 4-byte address, but argument is 'ip4_addr_t',
  * not a pointer */
-#define ip4_addr_get_byte_val(ipaddr, idx) ((u8_t)(((ipaddr).addr >> (idx * 8)) & 0xff))
+#define ip4_addr_get_byte_val(ipaddr, idx) ((u8_t)(((ipaddr).addr >> ((idx) * 8)) & 0xff))
 #define ip4_addr1_val(ipaddr) ip4_addr_get_byte_val(ipaddr, 0)
 #define ip4_addr2_val(ipaddr) ip4_addr_get_byte_val(ipaddr, 1)
 #define ip4_addr3_val(ipaddr) ip4_addr_get_byte_val(ipaddr, 2)

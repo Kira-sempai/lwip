@@ -296,12 +296,12 @@ typedef struct ip6_addr ip6_addr_t;
 
 #define IP6_ADDR_TENTATIVE_COUNT_MASK 0x07 /* 1-7 probes sent */
 
-#define ip6_addr_isinvalid(addr_state) (addr_state == IP6_ADDR_INVALID)
-#define ip6_addr_istentative(addr_state) (addr_state & IP6_ADDR_TENTATIVE)
-#define ip6_addr_isvalid(addr_state) (addr_state & IP6_ADDR_VALID) /* Include valid, preferred, and deprecated. */
-#define ip6_addr_ispreferred(addr_state) (addr_state == IP6_ADDR_PREFERRED)
-#define ip6_addr_isdeprecated(addr_state) (addr_state == IP6_ADDR_DEPRECATED)
-#define ip6_addr_isduplicated(addr_state) (addr_state == IP6_ADDR_DUPLICATED)
+#define ip6_addr_isinvalid(addr_state) ((addr_state) == IP6_ADDR_INVALID)
+#define ip6_addr_istentative(addr_state) ((addr_state) & IP6_ADDR_TENTATIVE)
+#define ip6_addr_isvalid(addr_state) ((addr_state) & IP6_ADDR_VALID) /* Include valid, preferred, and deprecated. */
+#define ip6_addr_ispreferred(addr_state) ((addr_state) == IP6_ADDR_PREFERRED)
+#define ip6_addr_isdeprecated(addr_state) ((addr_state) == IP6_ADDR_DEPRECATED)
+#define ip6_addr_isduplicated(addr_state) ((addr_state) == IP6_ADDR_DUPLICATED)
 
 #if LWIP_IPV6_ADDRESS_LIFETIMES
 #define IP6_ADDR_LIFE_STATIC   (0)
