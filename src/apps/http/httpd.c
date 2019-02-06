@@ -155,7 +155,6 @@ static const default_filename httpd_default_filenames[] = {
   {"/index.shtml", 1 },
   {"/index.ssi",   1 },
   {"/index.shtm",  1 },
-  {"/index.html.gz",  0 },
   {"/index.html",  0 },
   {"/index.htm",   0 }
 };
@@ -839,6 +838,26 @@ get_tag_insert(struct http_state *hs)
 }
 #endif /* LWIP_HTTPD_SSI */
 
+static uint8_t
+gzippedFileFound(const char * const uri) {
+  char *tmp;
+  char *name = NULL;
+
+  tmp = strchr(uri, '/');
+  while (tmp) {
+    name = tmp + 1;
+    tmp = strchr(name, '/');
+  }
+
+  if (name != NULL) {
+      if (!lwip_stricmp(name, "index.html") != 0) {
+        return 1;
+      }
+  }
+
+  return 0;
+}
+
 #if LWIP_HTTPD_DYNAMIC_HEADERS
 /**
  * Generate the relevant HTTP headers for the given filename and write
@@ -903,14 +922,21 @@ get_http_headers(struct http_state *hs, const char *uri)
     *vars = '\0';
   }
 
+
+  if (gzippedFileFound(uri)) {
+    ext = "gz";
+  } else {
   /* Get a pointer to the file extension.  We find this by looking for the
       last occurrence of "." in the filename passed. */
-  ext = NULL;
-  tmp = strchr(uri, '.');
-  while (tmp) {
-    ext = tmp + 1;
-    tmp = strchr(ext, '.');
+
+    ext = NULL;
+    tmp = strchr(uri, '.');
+    while (tmp) {
+      ext = tmp + 1;
+      tmp = strchr(ext, '.');
+    }
   }
+
   if (ext != NULL) {
     /* Now determine the content type and add the relevant header for that. */
     for (content_type = 0; content_type < NUM_HTTP_HEADERS; content_type++) {
