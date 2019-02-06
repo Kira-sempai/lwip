@@ -840,6 +840,8 @@ get_tag_insert(struct http_state *hs)
 
 static uint8_t
 gzippedFileFound(const char * const uri) {
+
+  unsigned char i;
   char *tmp;
   char *name = NULL;
 
@@ -849,10 +851,18 @@ gzippedFileFound(const char * const uri) {
     tmp = strchr(name, '/');
   }
 
+  const char* gzippedFilesList[] = {
+		  "index.html",
+		  "andex.html",
+  };
+
   if (name != NULL) {
-      if (!lwip_stricmp(name, "index.html") != 0) {
+
+    for (i = 0; i < sizeof(gzippedFilesList)/sizeof(gzippedFilesList[0]); i++) {
+      if (lwip_stricmp(name, gzippedFilesList[i]) == 0) {
         return 1;
       }
+    }
   }
 
   return 0;
