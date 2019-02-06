@@ -154,6 +154,11 @@ extern signed long memused;
 #define FS_FILE_EXTENSION_T_DEFINED
 typedef struct fs_pextension fs_file_extension;
 
+
+#define HTTPD_ADDITIONAL_CONTENT_TYPES {"gz", HTTP_HDR_HTMLZ}
+
+
+
 #ifdef SIMULATION
 #include "lwipopts_sim.h"
 #else
