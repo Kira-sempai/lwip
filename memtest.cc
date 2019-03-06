@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <vector>
 
-#include <Network/DebugMem.h>
+#include <Debug/DebugMem.h>
 
 struct memrec{
 	void* ptr;
