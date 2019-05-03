@@ -23,6 +23,9 @@
 
 /* This function is used for LWIP_RAND by some ports... */
 unsigned int
+lwip_port_rand(void);
+
+unsigned int
 lwip_port_rand(void)
 {
   return rand();
