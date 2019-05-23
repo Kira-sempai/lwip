@@ -110,8 +110,8 @@ err_t mdns_resp_remove_netif(struct netif *netif);
 err_t mdns_resp_rename_netif(struct netif *netif, const char *hostname);
 
 s8_t  mdns_resp_add_service(struct netif *netif, const char *name, const char *service, enum mdns_sd_proto proto, u16_t port, service_get_txt_fn_t txt_fn, void *txt_userdata);
-err_t mdns_resp_del_service(struct netif *netif, s8_t slot);
-err_t mdns_resp_rename_service(struct netif *netif, s8_t slot, const char *name);
+err_t mdns_resp_del_service(struct netif *netif, u8_t slot);
+err_t mdns_resp_rename_service(struct netif *netif, u8_t slot, const char *name);
 
 err_t mdns_resp_add_service_txtitem(struct mdns_service *service, const char *txt, u8_t txt_len);
 
@@ -136,8 +136,8 @@ typedef void (*search_result_fn_t)(struct mdns_answer *answer, const char *varpa
 
 err_t mdns_search_service(const char *name, const char *service, enum mdns_sd_proto proto,
                           struct netif *netif, search_result_fn_t result_fn, void *arg,
-                          s8_t *request_id);
-void mdns_search_stop(s8_t request_id);
+                          u8_t *request_id);
+void mdns_search_stop(u8_t request_id);
 
 #endif /* LWIP_MDNS_SEARCH */
 

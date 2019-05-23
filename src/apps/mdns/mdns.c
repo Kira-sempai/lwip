@@ -5,8 +5,10 @@
  * @defgroup mdns MDNS
  * @ingroup apps
  *
- * RFC 6762 - Multicast DNS\n
- * RFC 6763 - DNS-Based Service Discovery\n
+ * RFC 6762 - Multicast DNS<br>
+ * RFC 6763 - DNS-Based Service Discovery
+ *
+ * You need to increase MEMP_NUM_SYS_TIMEOUT by one if you use MDNS!
  *
  * @verbinclude mdns.txt
  *
@@ -811,7 +813,7 @@ static void
 mdns_debug_print_answer(struct mdns_packet *pkt, struct mdns_answer *a)
 {
 #ifdef LWIP_DEBUG
-  /* Arbitratry chose for 200 -> don't want to see more then that. It's only
+  /* Arbitrarily chose 200 -> don't want to see more then that. It's only
    * for debug so not that important. */
   char string[200];
   int i;
@@ -1309,7 +1311,7 @@ mdns_parse_pkt_authoritative_answers(struct netif *netif, struct mdns_packet *pk
     match = reply->host_replies & check_host(netif, &ans.info, &rev_v6);
     if (match) {
       reply->probe_query_recv = 1;
-      LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Probe for own host info received\r\n"));
+      LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Probe for own host info received\n"));
     }
 
     for (i = 0; i < MDNS_MAX_SERVICES; i++) {
@@ -1321,7 +1323,7 @@ mdns_parse_pkt_authoritative_answers(struct netif *netif, struct mdns_packet *pk
 
       if (match) {
         reply->probe_query_recv = 1;
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Probe for own service info received\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Probe for own service info received\n"));
       }
     }
   }
@@ -1417,7 +1419,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
   /* Ignore additional answers -> do not have any need for them at the moment */
   if(pkt->additional) {
     LWIP_DEBUGF(MDNS_DEBUG,
-      ("MDNS: Query contains additional answers -> they are discarded \r\n"));
+      ("MDNS: Query contains additional answers -> they are discarded\n"));
   }
 
   /* Any replies on question? */
@@ -1428,7 +1430,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
 
   if (!rrs_to_send) {
     /* This case is most common */
-    LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Nothing to answer\r\n"));
+    LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Nothing to answer\n"));
     return;
   }
 
@@ -1441,13 +1443,13 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
    */
   if (pkt->source_port != LWIP_IANA_PORT_MDNS) {
     if (pkt->questions == 1) {
-      LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: request from legacy querier\r\n"));
+      LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: request from legacy querier\n"));
       reply.legacy_query = 1;
       reply.tx_id = pkt->tx_id;
       reply.cache_flush = 0;
     }
     else {
-      LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: ignore query if (src UDP port != 5353) && (!= legacy query)\r\n"));
+      LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: ignore query if (src UDP port != 5353) && (!= legacy query)\n"));
       return;
     }
   }
@@ -1483,7 +1485,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
     delay_response = 0;
   }
 #endif
-  LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: response %s delayed\r\n", (delay_response ? "randomly" : "not")));
+  LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: response %s delayed\n", (delay_response ? "randomly" : "not")));
 
   /* Unicast / multicast response:
    * Answering to (m)DNS querier via unicast response.
@@ -1510,7 +1512,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
       || (reply.probe_query_recv && reply.unicast_reply_requested)) {
     send_unicast = 1;
   }
-  LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: send response via %s\r\n", (send_unicast ? "unicast" : "multicast")));
+  LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: send response via %s\n", (send_unicast ? "unicast" : "multicast")));
 
   /* Send out or put on waiting list */
   if (delay_response) {
@@ -1521,7 +1523,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
        *  - no message is in it yet
        */
       if (IP_IS_V6_VAL(pkt->source_addr) && !mdns->ipv6.unicast_msg_in_use) {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to unicast IPv6 waiting list\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to unicast IPv6 waiting list\n"));
         SMEMCPY(&mdns->ipv6.delayed_msg_unicast.dest_addr, &pkt->source_addr, sizeof(ip_addr_t));
         mdns->ipv6.delayed_msg_unicast.dest_port = pkt->source_port;
 
@@ -1537,7 +1539,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
        *  - no message is in it yet
        */
       if (IP_IS_V4_VAL(pkt->source_addr) && !mdns->ipv4.unicast_msg_in_use) {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to unicast IPv4 waiting list\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to unicast IPv4 waiting list\n"));
         SMEMCPY(&mdns->ipv4.delayed_msg_unicast.dest_addr, &pkt->source_addr, sizeof(ip_addr_t));
         mdns->ipv4.delayed_msg_unicast.dest_port = pkt->source_port;
 
@@ -1560,7 +1562,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
        */
       if (IP_IS_V6_VAL(pkt->source_addr) && !mdns->ipv6.multicast_timeout
           && !reply.probe_query_recv) {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to multicast IPv6 waiting list\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to multicast IPv6 waiting list\n"));
 
         mdns_add_msg_to_delayed(&mdns->ipv6.delayed_msg_multicast, &reply);
 
@@ -1568,7 +1570,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
                          &mdns->ipv6.multicast_msg_waiting);
       }
       else if (IP_IS_V6_VAL(pkt->source_addr) && reply.probe_query_recv) {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to probe multicast IPv6 waiting list\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to probe multicast IPv6 waiting list\n"));
 
         mdns_add_msg_to_delayed(&mdns->ipv6.delayed_msg_multicast, &reply);
 
@@ -1586,7 +1588,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
        */
       if (IP_IS_V4_VAL(pkt->source_addr) && !mdns->ipv4.multicast_timeout
           && !reply.probe_query_recv) {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to multicast IPv4 waiting list\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to multicast IPv4 waiting list\n"));
 
         mdns_add_msg_to_delayed(&mdns->ipv4.delayed_msg_multicast, &reply);
 
@@ -1594,7 +1596,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
                          &mdns->ipv4.multicast_msg_waiting);
       }
       else if (IP_IS_V4_VAL(pkt->source_addr) && reply.probe_query_recv) {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to probe multicast IPv4 waiting list\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: add answers to probe multicast IPv4 waiting list\n"));
 
         mdns_add_msg_to_delayed(&mdns->ipv4.delayed_msg_multicast, &reply);
 
@@ -1611,10 +1613,10 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
       /* send answer directly via unicast */
       res = mdns_send_outpacket(&reply, netif);
       if (res != ERR_OK) {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Unicast answer could not be send\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Unicast answer could not be send\n"));
       }
       else {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Unicast answer send successfully\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Unicast answer send successfully\n"));
       }
       return;
     }
@@ -1623,7 +1625,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
 #if LWIP_IPV6
       if (IP_IS_V6_VAL(pkt->source_addr)) {
         if (mdns->ipv6.multicast_timeout && !reply.probe_query_recv) {
-          LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: we just multicasted, ignore question\r\n"));
+          LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: we just multicasted, ignore question\n"));
           return;
         }
         SMEMCPY(&reply.dest_addr, &v6group, sizeof(ip_addr_t));
@@ -1632,7 +1634,7 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
 #if LWIP_IPV4
       if (IP_IS_V4_VAL(pkt->source_addr)) {
         if (mdns->ipv4.multicast_timeout && !reply.probe_query_recv) {
-          LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: we just multicasted, ignore question\r\n"));
+          LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: we just multicasted, ignore question\n"));
           return;
         }
         SMEMCPY(&reply.dest_addr, &v4group, sizeof(ip_addr_t));
@@ -1642,10 +1644,10 @@ mdns_handle_question(struct mdns_packet *pkt, struct netif *netif)
       /* send answer directly via multicast */
       res = mdns_send_outpacket(&reply, netif);
       if (res != ERR_OK) {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Multicast answer could not be send\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Multicast answer could not be send\n"));
       }
       else {
-        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Multicast answer send successfully\r\n"));
+        LWIP_DEBUGF(MDNS_DEBUG, ("MDNS: Multicast answer send successfully\n"));
 #if LWIP_IPV6
         if (IP_IS_V6_VAL(pkt->source_addr)) {
           mdns_start_multicast_timeouts_ipv6(netif);
@@ -2383,8 +2385,7 @@ mdns_resp_rename_netif(struct netif *netif, const char *hostname)
 s8_t
 mdns_resp_add_service(struct netif *netif, const char *name, const char *service, enum mdns_sd_proto proto, u16_t port, service_get_txt_fn_t txt_fn, void *txt_data)
 {
-  s8_t i;
-  s8_t slot = -1;
+  u8_t slot;
   struct mdns_service *srv;
   struct mdns_host *mdns;
 
@@ -2397,13 +2398,12 @@ mdns_resp_add_service(struct netif *netif, const char *name, const char *service
   LWIP_ERROR("mdns_resp_add_service: Service too long", (strlen(service) <= MDNS_LABEL_MAXLEN), return ERR_VAL);
   LWIP_ERROR("mdns_resp_add_service: Bad proto (need TCP or UDP)", (proto == DNSSD_PROTO_TCP || proto == DNSSD_PROTO_UDP), return ERR_VAL);
 
-  for (i = 0; i < MDNS_MAX_SERVICES; i++) {
-    if (mdns->services[i] == NULL) {
-      slot = i;
+  for (slot = 0; slot < MDNS_MAX_SERVICES; slot++) {
+    if (mdns->services[slot] == NULL) {
       break;
     }
   }
-  LWIP_ERROR("mdns_resp_add_service: Service list full (increase MDNS_MAX_SERVICES)", (slot >= 0), return ERR_MEM);
+  LWIP_ERROR("mdns_resp_add_service: Service list full (increase MDNS_MAX_SERVICES)", (slot < MDNS_MAX_SERVICES), return ERR_MEM);
 
   srv = (struct mdns_service *)mem_calloc(1, sizeof(struct mdns_service));
   LWIP_ERROR("mdns_resp_add_service: Alloc failed", (srv != NULL), return ERR_MEM);
@@ -2430,14 +2430,14 @@ mdns_resp_add_service(struct netif *netif, const char *name, const char *service
  * @return ERR_OK if the service was removed from the netif, an err_t otherwise
  */
 err_t
-mdns_resp_del_service(struct netif *netif, s8_t slot)
+mdns_resp_del_service(struct netif *netif, u8_t slot)
 {
   struct mdns_host *mdns;
   struct mdns_service *srv;
   LWIP_ASSERT("mdns_resp_del_service: netif != NULL", netif);
   mdns = NETIF_TO_HOST(netif);
   LWIP_ERROR("mdns_resp_del_service: Not an mdns netif", (mdns != NULL), return ERR_VAL);
-  LWIP_ERROR("mdns_resp_del_service: Invalid Service ID", (slot >= 0) && (slot < MDNS_MAX_SERVICES), return ERR_VAL);
+  LWIP_ERROR("mdns_resp_del_service: Invalid Service ID", slot < MDNS_MAX_SERVICES, return ERR_VAL);
   LWIP_ERROR("mdns_resp_del_service: Invalid Service ID", (mdns->services[slot] != NULL), return ERR_VAL);
 
   srv = mdns->services[slot];
@@ -2455,7 +2455,7 @@ mdns_resp_del_service(struct netif *netif, s8_t slot)
  * @return ERR_OK if name could be set on service, an err_t otherwise
  */
 err_t
-mdns_resp_rename_service(struct netif *netif, s8_t slot, const char *name)
+mdns_resp_rename_service(struct netif *netif, u8_t slot, const char *name)
 {
   struct mdns_service *srv;
   struct mdns_host *mdns;
@@ -2467,7 +2467,7 @@ mdns_resp_rename_service(struct netif *netif, s8_t slot, const char *name)
   mdns = NETIF_TO_HOST(netif);
   LWIP_ERROR("mdns_resp_rename_service: Not an mdns netif", (mdns != NULL), return ERR_VAL);
   LWIP_ERROR("mdns_resp_rename_service: Name too long", (len <= MDNS_LABEL_MAXLEN), return ERR_VAL);
-  LWIP_ERROR("mdns_resp_rename_service: Invalid Service ID", (slot >= 0) && (slot < MDNS_MAX_SERVICES), return ERR_VAL);
+  LWIP_ERROR("mdns_resp_rename_service: Invalid Service ID", slot < MDNS_MAX_SERVICES, return ERR_VAL);
   LWIP_ERROR("mdns_resp_rename_service: Invalid Service ID", (mdns->services[slot] != NULL), return ERR_VAL);
 
   srv = mdns->services[slot];
@@ -2506,10 +2506,10 @@ mdns_resp_add_service_txtitem(struct mdns_service *service, const char *txt, u8_
  * @param request_id The search request to stop
  */
 void
-mdns_search_stop(s8_t request_id)
+mdns_search_stop(u8_t request_id)
 {
   struct mdns_request *req;
-  LWIP_ASSERT("mdns_search_stop: bad request_id", (request_id >= 0) && (request_id < MDNS_MAX_REQUESTS));
+  LWIP_ASSERT("mdns_search_stop: bad request_id", request_id < MDNS_MAX_REQUESTS);
   req = &mdns_requests[request_id];
   if (req && req->result_fn) {
     req->result_fn = NULL;
@@ -2525,7 +2525,7 @@ mdns_search_stop(s8_t request_id)
  *              for others ("_udp")
  * @param netif The network interface where to send search request
  * @param result_fn Callback to send answer received. Will be called for each answer of a
- *                  responce frame matching request sent
+ *                  response frame matching request sent.
  * @param arg Userdata pointer for result_fn
  * @param request_id Returned request identifier to allow stop it.
  * @return ERR_OK if the search request was created and sent, an err_t otherwise
@@ -2533,9 +2533,9 @@ mdns_search_stop(s8_t request_id)
 err_t
 mdns_search_service(const char *name, const char *service, enum mdns_sd_proto proto,
                     struct netif *netif, search_result_fn_t result_fn, void *arg,
-                    s8_t *request_id)
+                    u8_t *request_id)
 {
-  s8_t i, slot = -1;
+  u8_t slot;
   struct mdns_request *req;
   if (name) {
     LWIP_ERROR("mdns_search_service: Name too long", (strlen(name) <= MDNS_LABEL_MAXLEN), return ERR_VAL);
@@ -2543,13 +2543,12 @@ mdns_search_service(const char *name, const char *service, enum mdns_sd_proto pr
   LWIP_ERROR("mdns_search_service: Service too long", (strlen(service) < MDNS_DOMAIN_MAXLEN), return ERR_VAL);
   LWIP_ERROR("mdns_search_service: Bad reqid pointer", request_id, return ERR_VAL);
   LWIP_ERROR("mdns_search_service: Bad proto (need TCP or UDP)", (proto == DNSSD_PROTO_TCP || proto == DNSSD_PROTO_UDP), return ERR_VAL);
-  for (i = 0; i < MDNS_MAX_REQUESTS; i++) {
-    if (mdns_requests[i].result_fn == NULL) {
-      slot = i;
+  for (slot = 0; slot < MDNS_MAX_REQUESTS; slot++) {
+    if (mdns_requests[slot].result_fn == NULL) {
       break;
     }
   }
-  if (slot < 0) {
+  if (slot >= MDNS_MAX_REQUESTS) {
     /* Don't assert if no more space in mdns_request table. Just return an error. */
     return ERR_MEM;
   }
@@ -2571,10 +2570,10 @@ mdns_search_service(const char *name, const char *service, enum mdns_sd_proto pr
   *request_id = slot;
   /* now prepare a MDNS request and send it (on specified interface) */
 #if LWIP_IPV6
-  mdns_send_request(req, netif, IP6_ADDR_ANY);
+  mdns_send_request(req, netif, &v6group);
 #endif
 #if LWIP_IPV4
-  mdns_send_request(req, netif, IP4_ADDR_ANY);
+  mdns_send_request(req, netif, &v4group);
 #endif
   return ERR_OK;
 }
