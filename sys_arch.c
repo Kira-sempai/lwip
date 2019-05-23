@@ -245,7 +245,7 @@ sys_thread_t sys_thread_new(const char *name, void (* thread)(void *arg), void *
 	last_tcb = &data->tcb;
 
 	if (atomThreadCreate(&data->tcb, prio, lwipThreadWrapper, (uint32_t)data, 
-				(&data->stack_bottom) + stacksize, stacksize)!=ATOM_OK)
+				(&data->stack_bottom) + stacksize, stacksize, TRUE)!=ATOM_OK)
 		goto out1;
 
 	return &data->tcb;
