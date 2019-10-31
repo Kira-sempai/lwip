@@ -7,7 +7,7 @@
 #include <kernel/assert.h>
 #include <osAlloc.h>
 #include <stdlib.h>
-#include <hardware/mcu.h>
+//#include <hardware/mcu.h>
 
 // --- Memory ---
 #define MEM_LIBC_MALLOC 1
@@ -41,6 +41,13 @@ extern signed long memused;
 
 #define TCP_MSS                         1460
 #define TCP_OVERSIZE                    0
+
+#if defined(CFG_MCU_STM32F215ZG)
+#define MCU_GROUP_IS_STM32F2
+#elif defined(CFG_MCU_STM32F746IE)
+#define MCU_GROUP_IS_STM32F7
+#endif
+
 
 #if defined(MCU_GROUP_IS_STM32F1)
 
