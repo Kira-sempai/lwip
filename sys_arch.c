@@ -1,12 +1,12 @@
 /**
  * Architecture wrapping functions for LWIP
  */
-
+#include <config.h>
 #include <arch/sys_arch.h>
+#include <drivers/mcu/systimer.h>
 
 #if NO_SYS
 
-#include <hardware/systimer.h>
 
 u32_t sys_now(void)
 {
@@ -16,7 +16,6 @@ u32_t sys_now(void)
 #else // NO_SYS
 #include <lwip/sys.h>
 #include <kernel/malloc.h>
-#include <hardware/systimer.h>
 
 static ATOM_TCB *last_tcb;
 
