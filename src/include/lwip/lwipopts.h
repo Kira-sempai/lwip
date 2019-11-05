@@ -7,7 +7,6 @@
 #include <kernel/assert.h>
 #include <osAlloc.h>
 #include <stdlib.h>
-//#include <hardware/mcu.h>
 
 // --- Memory ---
 #define MEM_LIBC_MALLOC 1
@@ -42,45 +41,23 @@ extern signed long memused;
 #define TCP_MSS                         1460
 #define TCP_OVERSIZE                    0
 
-#if defined(CFG_MCU_STM32F215ZG)
-#define MCU_GROUP_IS_STM32F2
-#elif defined(CFG_MCU_STM32F746IE)
-#define MCU_GROUP_IS_STM32F7
+
+#if defined(CFG_LWIP_TCP_SND_BUF)
+#define TCP_SND_BUF				CFG_LWIP_TCP_SND_BUF
 #endif
 
-
-#if defined(MCU_GROUP_IS_STM32F1)
-
-#define TCP_SND_BUF						(2*TCP_MSS)
+#if defined(CFG_LWIP_HTTP_MEMUSE_LEVEL_1)
 // buf size divided by 2
-#define HTTP_MEMUSE_LEVEL_1 (8*1024)
+#define HTTP_MEMUSE_LEVEL_1 CFG_LWIP_HTTP_MEMUSE_LEVEL_1
+#endif
+
+#if defined(CFG_LWIP_HTTP_MEMUSE_LEVEL_2)
 // buf size divided by 4
-#define HTTP_MEMUSE_LEVEL_2 (12*1024)
+#define HTTP_MEMUSE_LEVEL_2 CFG_LWIP_HTTP_MEMUSE_LEVEL_2
+#endif
 
-#define HTTP_MEM_RESERVE (4*1024)
-
-#elif defined(MCU_GROUP_IS_STM32F2)
-
-#define TCP_SND_BUF						(6*TCP_MSS)
-// buf size divided by 2
-#define HTTP_MEMUSE_LEVEL_1 (12*1024)
-// buf size divided by 4
-#define HTTP_MEMUSE_LEVEL_2 (16*1024)
-
-#define HTTP_MEM_RESERVE (8*1024)
-
-#elif defined(MCU_GROUP_IS_STM32F7)
-
-#define TCP_SND_BUF						(6*TCP_MSS)
-// buf size divided by 2
-#define HTTP_MEMUSE_LEVEL_1 (12*1024)
-// buf size divided by 4
-#define HTTP_MEMUSE_LEVEL_2 (16*1024)
-
-#define HTTP_MEM_RESERVE (6*1024)
-
-#else
-#error "MCU is not defined"
+#if defined(CFG_LWIP_HTTP_MEM_RESERVE)
+#define HTTP_MEM_RESERVE CFG_LWIP_HTTP_MEM_RESERVE
 #endif
 
 
@@ -169,7 +146,7 @@ typedef struct fs_pextension fs_file_extension;
 #ifdef SIMULATION
 #include "lwipopts_sim.h"
 #else
-#include <hardware/mcu.h>
+#include <drivers/mcu/flash_mcu.h>
 
 /* ---------- Statistics options ---------- */
 
@@ -291,7 +268,7 @@ typedef struct fs_pextension fs_file_extension;
 
 
 #include <stdio.h>
-
+#include <drivers/mcu/rng.h>
 #define LWIP_RAND _rand
 
 /** Set this to 1 to support fs_read() to dynamically read file data.
