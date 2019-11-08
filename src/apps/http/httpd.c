@@ -2764,6 +2764,9 @@ httpd_init_pcb(struct altcp_pcb *pcb, u16_t port)
     LWIP_ASSERT("httpd_init: tcp_bind failed", err == ERR_OK);
     pcb = altcp_listen(pcb);
     LWIP_ASSERT("httpd_init: tcp_listen failed", pcb != NULL);
+    if (pcb == NULL) {
+    	return;
+    }
     altcp_accept(pcb, http_accept);
   }
 }
