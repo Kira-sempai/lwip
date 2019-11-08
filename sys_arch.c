@@ -4,6 +4,7 @@
 #include <config.h>
 #include <arch/sys_arch.h>
 #include <drivers/mcu/systimer.h>
+#include <lwip/lwip_hooks.h>  // workaround to show SCons this include
 
 #if NO_SYS
 
