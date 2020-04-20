@@ -7,6 +7,7 @@
 #include <Network/filenameReducer.h>
 #include <Network/post.h>
 #include <Network/SmallPages.h>
+#include <lwip/lwip_hooks.h>
 #include <lwip/apps/fs.h>
 #include <lwip/apps/fs_custom_files.h>
 
