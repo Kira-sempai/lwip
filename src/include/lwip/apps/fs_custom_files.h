@@ -48,7 +48,7 @@ int fs_open_custom(struct fs_file *file, const char *name);
 void fs_close_custom(struct fs_file *file);
 int fs_read_custom(struct fs_file *file, char *buffer, int count);
 
-char * getETagHeader(fs_file_extension * const pextension);
+//char * getETagHeader(fs_file_extension * const pextension);
 
 #ifdef __cplusplus
 }
