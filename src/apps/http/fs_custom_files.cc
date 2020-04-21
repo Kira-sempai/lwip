@@ -302,7 +302,6 @@ fs_wait_read_custom(struct fs_file *file, fs_wait_cb callback_fn, void *callback
 #endif // LWIP_HTTPD_FS_ASYNC_READ
 
 
-extern "C"
 char * getETagHeader(fs_file_extension * const pextension) {
 	if (pextension != nullptr) {
 	    if ((pextension->type == CUSTOM_FILE_SD) && (pextension->ETag != 0)) {
@@ -312,7 +311,6 @@ char * getETagHeader(fs_file_extension * const pextension) {
 	return nullptr;
 }
 
-extern "C"
 void setCookieSessionID(fs_file_extension * const pextension, const uint32_t session_id) {
   if (  (pextension->jsonResponse != nullptr)
     && ((pextension->type == CUSTOM_FILE_JSON)
