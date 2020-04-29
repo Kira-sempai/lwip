@@ -24,12 +24,12 @@ void* memt_calloc (size_t, size_t);
 void* memt_malloc (size_t);
 void  memt_free (void*);
 
+extern signed long memused;
 #ifdef __cplusplus
 }
 #endif
 // --- Memory ---
 
-extern signed long memused;
 
 #define mem_clib_free memt_free
 #define mem_clib_malloc memt_malloc
