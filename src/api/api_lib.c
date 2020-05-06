@@ -500,7 +500,7 @@ netconn_accept(struct netconn *conn, struct netconn **new_conn)
 
   NETCONN_MBOX_WAITING_INC(conn);
   if (netconn_is_nonblocking(conn)) {
-    if (sys_arch_mbox_tryfetch(&conn->acceptmbox, &accept_ptr) == SYS_ARCH_TIMEOUT) {
+    if (sys_arch_mbox_tryfetch(&conn->acceptmbox, &accept_ptr) == SYS_MBOX_EMPTY) {
       API_MSG_VAR_FREE_ACCEPT(msg);
       NETCONN_MBOX_WAITING_DEC(conn);
       return ERR_WOULDBLOCK;
@@ -597,7 +597,7 @@ netconn_recv_data(struct netconn *conn, void **new_buf, u8_t apiflags)
   NETCONN_MBOX_WAITING_INC(conn);
   if (netconn_is_nonblocking(conn) || (apiflags & NETCONN_DONTBLOCK) ||
       (conn->flags & NETCONN_FLAG_MBOXCLOSED) || (conn->pending_err != ERR_OK)) {
-    if (sys_arch_mbox_tryfetch(&conn->recvmbox, &buf) == SYS_ARCH_TIMEOUT) {
+    if (sys_arch_mbox_tryfetch(&conn->recvmbox, &buf) == SYS_MBOX_EMPTY) {
       err_t err;
       NETCONN_MBOX_WAITING_DEC(conn);
       err = netconn_err(conn);
@@ -1346,7 +1346,7 @@ void
 netconn_thread_init(void)
 {
   sys_sem_t *sem = LWIP_NETCONN_THREAD_SEM_GET();
-  if ((sem == NULL) || !sys_sem_valid(sem)) {
+  if (!sys_sem_valid(sem)) {
     /* call alloc only once */
     LWIP_NETCONN_THREAD_SEM_ALLOC();
     LWIP_ASSERT("LWIP_NETCONN_THREAD_SEM_ALLOC() failed", sys_sem_valid(LWIP_NETCONN_THREAD_SEM_GET()));
@@ -1357,7 +1357,7 @@ void
 netconn_thread_cleanup(void)
 {
   sys_sem_t *sem = LWIP_NETCONN_THREAD_SEM_GET();
-  if ((sem != NULL) && sys_sem_valid(sem)) {
+  if (sys_sem_valid(sem)) {
     /* call free only once */
     LWIP_NETCONN_THREAD_SEM_FREE();
   }

@@ -83,6 +83,7 @@
 
 #include "examples/httpd/cgi_example/cgi_example.h"
 #include "examples/httpd/fs_example/fs_example.h"
+#include "examples/httpd/https_example/https_example.h"
 #include "examples/httpd/ssi_example/ssi_example.h"
 
 #include "default_netif.h"
@@ -370,9 +371,6 @@ test_netif_init(void)
 #endif
 #if LWIP_IPV6
   netif_create_ip6_linklocal_address(netif_default, 1);
-#if LWIP_IPV6_AUTOCONFIG
-  netif_default->ip6_autoconfig_enabled = 1;
-#endif
   printf("ip6 linklocal address: %s\n", ip6addr_ntoa(netif_ip6_addr(netif_default, 0)));
 #endif /* LWIP_IPV6 */
 #if LWIP_NETIF_STATUS_CALLBACK
@@ -539,6 +537,9 @@ apps_init(void)
 #endif
 #if defined(LWIP_HTTPD_EXAMPLE_CGI_SIMPLE) && LWIP_HTTPD_EXAMPLE_CGI_SIMPLE
   cgi_ex_init();
+#endif
+#if defined(LWIP_HTTPD_EXAMPLE_HTTPS) && LWIP_HTTPD_EXAMPLE_HTTPS
+  https_ex_init();
 #endif
 #endif /* LWIP_HTTPD_APP_NETCONN */
 #endif /* LWIP_HTTPD_APP && LWIP_TCP */
