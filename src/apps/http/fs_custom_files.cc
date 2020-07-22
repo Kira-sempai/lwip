@@ -87,7 +87,7 @@ fs_pextension::fs_pextension (
 	}
 }
 
-static const char *const getNormalizedFilePath(const char* const name) {
+static const char * getNormalizedFilePath(const char* const name) {
 	const char * normalizedName = convertFilePath(name);
 	size_t filePathSize = strlen(WebFolder) + strlen(normalizedName);
 	char * filePath = stringBufferAlloc(filePathSize + 1);
