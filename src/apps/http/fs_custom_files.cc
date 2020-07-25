@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <fatfs.h>
-#include <debug_log.h>
+#include <debug/debug_log.h>
 #include <os/StringBuffer.h>
 #include <Debug/DebugTime.h>
 #include <Network/filenameReducer.h>
