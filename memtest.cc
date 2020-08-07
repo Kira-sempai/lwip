@@ -36,34 +36,41 @@ static void increaseMemused(void * const p, const size_t size) {
 extern "C" {
 
 void* memt_malloc (size_t size){
+#if CFG_MODULE_DEBUG
 	const char* dmb = DM_block;
 	DM_changeBlock("memt");
-
+#endif
 	void *p = malloc(size);
 
 	increaseMemused(p, size);
-
+#if CFG_MODULE_DEBUG
 	DM_changeBlock(dmb);
-
+#endif
 	return p;
 }
 
 void* memt_calloc (size_t size, size_t c){
+#if CFG_MODULE_DEBUG
 	const char* dmb = DM_block;
 	DM_changeBlock("memt");
+#endif
 
 	void *p = calloc(size, c);
 
 	increaseMemused(p, size);
 
+#if CFG_MODULE_DEBUG
 	DM_changeBlock(dmb);
+#endif
 
 	return p;
 }
 
 void  memt_free (void* ptr){
+#if CFG_MODULE_DEBUG
 	const char* dmb = DM_block;
 	DM_changeBlock("memt");
+#endif
 
 	if (ptr!=NULL){
 		free(ptr);
@@ -74,13 +81,17 @@ void  memt_free (void* ptr){
 				if (memrecs().capacity()>2*memrecs().size()){
 					memrecs().shrink_to_fit();
 				}
+#if CFG_MODULE_DEBUG
 				DM_changeBlock(dmb);
+#endif
 				return;
 			}
 		}
 		dbgOut(("memfree - ptr not found\r\n"));
 	}
+#if CFG_MODULE_DEBUG
 	DM_changeBlock(dmb);
+#endif
 }
 
 }
