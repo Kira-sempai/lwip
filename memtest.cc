@@ -11,6 +11,8 @@
 
 #include <Debug/DebugMem.h>
 
+#include <debug/printf.h>
+
 struct memrec{
 	void* ptr;
 	size_t size;
@@ -76,7 +78,7 @@ void  memt_free (void* ptr){
 				return;
 			}
 		}
-		printf("memfree - ptr not found\r\n");
+		dbgOut(("memfree - ptr not found\r\n"));
 	}
 	DM_changeBlock(dmb);
 }

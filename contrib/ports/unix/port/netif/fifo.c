@@ -98,7 +98,7 @@ void fifoPut(fifo_t * fifo, int fd)
 
 	if ( fifo->len > FIFOSIZE )
 	{
-		printf( "ERROR: fifo overrun detected len=%d, flushing\n", fifo->len );
+		dbgOut(( "ERROR: fifo overrun detected len=%d, flushing", fifo->len ));
 		fifo->dataslot  = 0;
 		fifo->emptyslot = 0;
 		fifo->len = 0;
