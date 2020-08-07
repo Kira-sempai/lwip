@@ -603,14 +603,13 @@ mqtt_cyclic_timer(void *arg)
       }
 
       /* If time for a keep alive message to be sent, transmission has been idle for keep_alive time */
+      client->cyclic_tick++;
       if ((client->cyclic_tick * MQTT_CYCLIC_TIMER_INTERVAL) >= client->keep_alive) {
         LWIP_DEBUGF(MQTT_DEBUG_TRACE, ("mqtt_cyclic_timer: Sending keep-alive message to server\n"));
         if (mqtt_output_check_space(&client->output, 0) != 0) {
           mqtt_output_append_fixed_header(&client->output, MQTT_MSG_TYPE_PINGREQ, 0, 0, 0, 0);
           client->cyclic_tick = 0;
         }
-      } else {
-        client->cyclic_tick++;
       }
     }
   } else {
@@ -1170,7 +1169,7 @@ mqtt_publish(mqtt_client_t *client, const char *topic, const void *payload, u16_
  * @param client MQTT client
  * @param topic topic to subscribe to
  * @param qos Quality of service, 0 1 or 2 (only used for subscribe)
- * @param cb Callback to call when subscribe/unsubscribe reponse is received
+ * @param cb Callback to call when subscribe/unsubscribe response is received
  * @param arg User supplied argument to publish callback
  * @param sub 1 for subscribe, 0 for unsubscribe
  * @return ERR_OK if successful, @see err_t enum for other results

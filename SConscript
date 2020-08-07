@@ -55,12 +55,9 @@ sources.extend([
 	'src/core/sys.c',
 	])
 
-program_headers.append(File(Split("""
-	src/include/lwip/lwip_hooks.h
-	""")))
+program_headers.append(File('src/include/lwip/lwip_hooks.h'))
 
 program_sources.extend(File(sources))
 program_objects.extend(targetEnv.StaticObject(sources))
 
 targetEnv['CPPPATH'].extend( [ Dir('src/include')] )
-

@@ -7,6 +7,7 @@
 #include <Network/filenameReducer.h>
 #include <Network/post.h>
 #include <Network/SmallPages.h>
+#include <lwip/lwip_hooks.h>
 #include <lwip/apps/fs.h>
 #include <lwip/apps/fs_custom_files.h>
 
@@ -86,7 +87,7 @@ fs_pextension::fs_pextension (
 	}
 }
 
-static const char *const getNormalizedFilePath(const char* const name) {
+static const char * getNormalizedFilePath(const char* const name) {
 	const char * normalizedName = convertFilePath(name);
 	size_t filePathSize = strlen(WebFolder) + strlen(normalizedName);
 	char * filePath = stringBufferAlloc(filePathSize + 1);
@@ -299,7 +300,6 @@ fs_wait_read_custom(struct fs_file *file, fs_wait_cb callback_fn, void *callback
   return 0;
 }
 #endif // LWIP_HTTPD_FS_ASYNC_READ
-
 
 extern "C"
 char * getETagHeader(fs_file_extension * const pextension) {

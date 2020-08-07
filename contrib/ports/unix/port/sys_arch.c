@@ -68,6 +68,9 @@
 #include "lwip/stats.h"
 #include "lwip/tcpip.h"
 
+/* Return code for an interrupted timed wait */
+#define SYS_ARCH_INTR 0xfffffffeUL
+
 u32_t
 lwip_port_rand(void)
 {
@@ -489,14 +492,20 @@ cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex, u32_t timeout)
   struct timespec rtime1, rtime2, ts;
   int ret;
 
-#ifdef __GNU__
+#ifdef LWIP_UNIX_HURD
   #define pthread_cond_wait pthread_hurd_cond_wait_np
   #define pthread_cond_timedwait pthread_hurd_cond_timedwait_np
 #endif
 
   if (timeout == 0) {
-    pthread_cond_wait(cond, mutex);
-    return 0;
+    ret = pthread_cond_wait(cond, mutex);
+    return
+#ifdef LWIP_UNIX_HURD
+    /* On the Hurd, ret == 1 means the RPC has been cancelled.
+     * The thread is awakened (not terminated) and execution must continue */
+    ret == 1 ? SYS_ARCH_INTR :
+#endif
+    (u32_t)ret;
   }
 
   /* Get a timestamp and add the timeout value. */
@@ -517,6 +526,12 @@ cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex, u32_t timeout)
 #endif
   if (ret == ETIMEDOUT) {
     return SYS_ARCH_TIMEOUT;
+#ifdef LWIP_UNIX_HURD
+    /* On the Hurd, ret == 1 means the RPC has been cancelled.
+     * The thread is awakened (not terminated) and execution must continue */
+  } else if (ret == EINTR) {
+    return SYS_ARCH_INTR;
+#endif
   }
 
   /* Calculate for how long we waited for the cond. */
@@ -546,11 +561,18 @@ sys_arch_sem_wait(struct sys_sem **s, u32_t timeout)
       if (time_needed == SYS_ARCH_TIMEOUT) {
         pthread_mutex_unlock(&(sem->mutex));
         return SYS_ARCH_TIMEOUT;
+#ifdef LWIP_UNIX_HURD
+      } else if(time_needed == SYS_ARCH_INTR) {
+        pthread_mutex_unlock(&(sem->mutex));
+        return 0;
+#endif
       }
       /*      pthread_mutex_unlock(&(sem->mutex));
               return time_needed; */
-    } else {
-      cond_wait(&(sem->cond), &(sem->mutex), 0);
+    } else if(cond_wait(&(sem->cond), &(sem->mutex), 0)) {
+      /* Some error happened or the thread has been awakened but not by lwip */
+      pthread_mutex_unlock(&(sem->mutex));
+      return 0;
     }
   }
   sem->c--;
@@ -648,9 +670,14 @@ u32_t
 sys_now(void)
 {
   struct timespec ts;
+  u32_t now;
 
   get_monotonic_time(&ts);
-  return (u32_t)(ts.tv_sec * 1000L + ts.tv_nsec / 1000000L);
+  now = (u32_t)(ts.tv_sec * 1000L + ts.tv_nsec / 1000000L);
+#ifdef LWIP_FUZZ_SYS_NOW
+  now += sys_now_offset;
+#endif
+  return now;
 }
 
 u32_t
@@ -730,6 +757,7 @@ sys_arch_unprotect(sys_prot_t pval)
 }
 #endif /* SYS_LIGHTWEIGHT_PROT */
 
+#if !NO_SYS
 /* get keyboard state to terminate the debug app by using select */
 int
 lwip_unix_keypressed(void)
@@ -740,3 +768,4 @@ lwip_unix_keypressed(void)
   FD_SET(0, &fds);
   return select(1, &fds, NULL, NULL, &tv);
 }
+#endif /* !NO_SYS */

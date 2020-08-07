@@ -99,7 +99,9 @@ typedef void (*service_get_txt_fn_t)(struct mdns_service *service, void *txt_use
  * uniqueness, called with result MDNS_PROBING_SUCCESSFUL if no other node claimed
  * use for the name for the netif or a service and is safe to use, or MDNS_PROBING_CONFLICT
  * if another node is already using it and mdns is disabled on this interface */
-typedef void (*mdns_name_result_cb_t)(struct netif* netif, u8_t result);
+typedef void (*mdns_name_result_cb_t)(struct netif* netif, u8_t result, s8_t slot);
+
+void *mdns_get_service_txt_userdata(struct netif *netif, s8_t slot);
 
 void mdns_resp_init(void);
 
@@ -108,6 +110,7 @@ void mdns_resp_register_name_result_cb(mdns_name_result_cb_t cb);
 err_t mdns_resp_add_netif(struct netif *netif, const char *hostname);
 err_t mdns_resp_remove_netif(struct netif *netif);
 err_t mdns_resp_rename_netif(struct netif *netif, const char *hostname);
+int mdns_resp_netif_active(struct netif *netif);
 
 s8_t  mdns_resp_add_service(struct netif *netif, const char *name, const char *service, enum mdns_sd_proto proto, u16_t port, service_get_txt_fn_t txt_fn, void *txt_userdata);
 err_t mdns_resp_del_service(struct netif *netif, u8_t slot);
@@ -115,6 +118,7 @@ err_t mdns_resp_rename_service(struct netif *netif, u8_t slot, const char *name)
 
 err_t mdns_resp_add_service_txtitem(struct mdns_service *service, const char *txt, u8_t txt_len);
 
+void mdns_resp_restart_delay(struct netif *netif, uint32_t delay);
 void mdns_resp_restart(struct netif *netif);
 void mdns_resp_announce(struct netif *netif);
 

@@ -5,6 +5,7 @@
  *      Author: andew
  */
 
+#include <Debug/DebugMem.h>
 
 #include "lwip/apps/httpd.h"
 #include "lwip/altcp.h"
@@ -23,8 +24,6 @@
 #endif
 
 void memtest();
-
-extern int last_free_mem;
 
 
 enum  {

@@ -23,7 +23,9 @@ std::vector<memrec> &memrecs(){
 	return mr;
 };
 
+extern "C" {
 signed long memused = 0;
+}
 
 static void increaseMemused(void * const p, const size_t size) {
 	if (p!=NULL){
