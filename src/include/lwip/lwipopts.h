@@ -177,7 +177,7 @@ typedef struct fs_pextension fs_file_extension;
 #define LWIP_NETCONN         (!NO_SYS)
 #define LWIP_SOCKET          0
 
-#ifdef CFG_MODULE_NETWORK
+#if defined(CFG_MODULE_NETWORK) || defined(CFG_FEATURES_WIFI)
 #define LWIP_TCP 1
 #else
 #define LWIP_TCP 0
