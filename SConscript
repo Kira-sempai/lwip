@@ -16,6 +16,8 @@ sources = Split("""
 	src/apps/http/httpd.c
 	src/apps/http/httpd_memory_management.c
 	
+	src/core/altcp.c
+	src/core/altcp_tcp.c
 	src/core/def.c
 	src/core/dns.c
 	src/core/inet_chksum.c
