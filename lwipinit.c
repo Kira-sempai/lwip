@@ -17,6 +17,7 @@ void lwipInit(void)
 
 void lwipReset(void)
 {
+//	printf("lwipReset\n\r"); fflush(stdout);
 #if NO_SYS
 	sys_restart_timeouts();
 #endif
