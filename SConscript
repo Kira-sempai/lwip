@@ -46,7 +46,6 @@ sources = Split("""
 
 	lwipinit.c
 
-	memtest.cc
 	""")
 
 # fuer NO_SYS=0 notwendig
