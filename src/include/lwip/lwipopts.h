@@ -24,7 +24,6 @@ void* memt_calloc (size_t, size_t);
 void* memt_malloc (size_t);
 void  memt_free (void*);
 
-extern signed long memused;
 #ifdef __cplusplus
 }
 #endif
