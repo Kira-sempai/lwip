@@ -101,7 +101,7 @@ static eCustomFileType getFileType(const char* const fileName) {
 			nullptr,
 			nullptr,
 			jsonResponseUri,
-			smallPageUri,
+			"/~sm/",
 			"/configs/",
 	};
 
