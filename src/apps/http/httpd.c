@@ -114,6 +114,8 @@
 
 #if LWIP_TCP && LWIP_CALLBACK_API
 
+char* strcasestr(const char *big, const char *little);
+
 /** Minimum length for a valid HTTP/0.9 request: "GET /\r\n" -> 7 bytes */
 #define MIN_REQ_LEN   7
 
@@ -2172,7 +2174,7 @@ http_parse_request(struct pbuf *inp, struct http_state *hs, struct altcp_pcb *pc
           const char* sess_id_str = "session_id=";
 
           do{
-            char * cookie = strstr(header, "Cookie:");
+            char * cookie = strcasestr(header, "Cookie:");
             if (!cookie) {
               break;
             }
