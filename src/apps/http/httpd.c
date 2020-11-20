@@ -114,7 +114,12 @@
 
 #if LWIP_TCP && LWIP_CALLBACK_API
 
+#if SIMULATION
+//can't fine strcasestr for simulation
+#define strcasestr strstr
+#else
 char* strcasestr(const char *big, const char *little);
+#endif
 
 /** Minimum length for a valid HTTP/0.9 request: "GET /\r\n" -> 7 bytes */
 #define MIN_REQ_LEN   7
