@@ -122,6 +122,9 @@ void  memt_free (void*);
  */
 #define LWIP_HTTPD_SUPPORT_11_KEEPALIVE     0
 
+/** Set this to 1 to support HTTP request coming in in multiple packets/pbufs */
+#define LWIP_HTTPD_SUPPORT_REQUESTLIST      1
+
 #if LWIP_HTTPD_SUPPORT_REQUESTLIST
 /** Number of rx pbufs to enqueue to parse an incoming request (up to the first
     newline) */
