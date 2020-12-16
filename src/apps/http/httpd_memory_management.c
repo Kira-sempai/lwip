@@ -31,18 +31,6 @@ enum  {
 	PRIORITY_HIGH,
 };
 
-/*
-static uint16_t limit(const uint16_t min, const uint16_t value, const uint16_t max) {
-	if (value > max) {
-		return max;
-	}
-	if (value < min) {
-		return min;
-	}
-	return value;
-}
-*/
-
 static u16_t http_bufLimit(const int avail_mem, const uint8_t priority) {
 	enum {
 		MINIMUM_BUFFER_SIZE = 64,
@@ -57,13 +45,14 @@ static u16_t http_bufLimit(const int avail_mem, const uint8_t priority) {
 
 	int bufLimit = MAXIMUM_BUFFER_SIZE;
 
-	if (avail_mem<=0)           { bufLimit = 64;}
+	if      (avail_mem<=0)      { bufLimit = MINIMUM_BUFFER_SIZE;}
 	else if (avail_mem<=1*1024) { bufLimit = 160;}
 	else if (avail_mem<=3*1024) { bufLimit = 512;}
 	else if (avail_mem<=5*1024) { bufLimit = 1024;}
-	else if (avail_mem<=6*1024) { bufLimit = MAXIMUM_BUFFER_SIZE;	memtest();}
+//	else if (avail_mem<=6*1024) { bufLimit = MAXIMUM_BUFFER_SIZE;	memtest();}
+	else if (avail_mem<=6*1024) { bufLimit = MAXIMUM_BUFFER_SIZE;}
 
-	if (bufLimit>64){
+	if (bufLimit>MINIMUM_BUFFER_SIZE){
 	  if (memused>HTTP_MEMUSE_LEVEL_1)		  bufLimit /= 2;
 	  if (memused>HTTP_MEMUSE_LEVEL_2)		  bufLimit /= 2;
 	  if (memused>HTTP_MEMUSE_LEVEL_2+2*1024) bufLimit = 64;
