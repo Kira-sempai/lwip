@@ -159,6 +159,17 @@ typedef struct fs_pextension fs_file_extension;
 
 #define HTTPD_ADDITIONAL_CONTENT_TYPES {"gz", HTTP_HDR_HTMLZ}
 
+/*
+   ----------------------------------
+   ---------- DNS options -----------
+   ----------------------------------
+*/
+/** DNS maximum number of entries to maintain locally. */
+#define DNS_TABLE_SIZE 2
+
+/** DNS maximum host name length supported in the name table. */
+#define DNS_MAX_NAME_LENGTH             128
+
 
 
 #ifdef SIMULATION
