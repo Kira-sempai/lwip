@@ -103,7 +103,10 @@ void  memt_free (void*);
  * - number of times pcb->poll is called -> default is 4*500ms = 2s;
  * - reset when pcb->sent is called
  */
-#define HTTPD_MAX_RETRIES                   30
+#define HTTPD_MAX_RETRIES                   10
+
+/** The poll delay is X*500ms */
+#define HTTPD_POLL_INTERVAL                 1
 
 /** Priority for tcp pcbs created by HTTPD (very low by default).
  *  Lower priorities get killed first when running out of memory.
