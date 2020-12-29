@@ -229,9 +229,6 @@ typedef struct fs_pextension fs_file_extension;
 /** Set this to 1 to support HTTP POST */
 #define LWIP_HTTPD_SUPPORT_POST   1
 
-/** The server port for HTTPD to use */
-#define HTTPD_SERVER_PORT         80
-
 #define MEM_SIZE                        16384
 #define PBUF_POOL_SIZE                  8 // with NO_SYS=0, might need to increase this to 32 to avoid deadlocks
 
@@ -280,9 +277,12 @@ typedef struct fs_pextension fs_file_extension;
 #define CHECKSUM_CHECK_UDP              0
 #define CHECKSUM_CHECK_TCP              0
 
-//#define TCP_TMR_INTERVAL       5  /* The TCP timer interval in milliseconds. */
+#define TCP_TMR_INTERVAL       100  /* The TCP timer interval in milliseconds. */
 
 //#define LWIP_DEBUG
+
+#ifdef LWIP_DEBUG
+#define LWIP_DBG_MIN_LEVEL         LWIP_DBG_LEVEL_ALL
 //#define MEMP_DEBUG LWIP_DBG_ON
 //#define PBUF_DEBUG LWIP_DBG_ON
 //#define SYS_DEBUG LWIP_DBG_ON
@@ -292,9 +292,9 @@ typedef struct fs_pextension fs_file_extension;
 //#define TIMERS_DEBUG LWIP_DBG_OFF
 //#define DHCP_DEBUG LWIP_DBG_ON
 //#define TCP_QLEN_DEBUG                  LWIP_DBG_ON
-//#define HTTPD_DEBUG         LWIP_DBG_ON
+#define HTTPD_DEBUG         LWIP_DBG_ON
 //#define LWIP_STATS_DISPLAY 1
-
+#endif
 
 #include <stdio.h>
 
