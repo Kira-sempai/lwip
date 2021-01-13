@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include <vector>
 #include <fatfs.h>
 #include <debug/debug_log.h>
 #include <os/StringBuffer.h>
@@ -174,7 +175,9 @@ static int openSDFile(struct fs_file * const file, const char* const name) {
 	return 1;
 }
 
-static std::vector<struct fs_file *> readingFileList;
+//static std::vector<struct fs_file *> readingFileList;
+static uint8_t openedFilesNum = 0;
+
 
 extern "C"
 int fs_open_custom(struct fs_file *file, const char *name)
@@ -185,7 +188,8 @@ int fs_open_custom(struct fs_file *file, const char *name)
 		return 0;
 	}
 
-	readingFileList.push_back(file);
+//	readingFileList.push_back(file);
+	openedFilesNum++;
 
 	switch(getFileType(name)) {
 	case CUSTOM_FILE_JSON       : { return initJSONResponse(file, name);}
@@ -206,7 +210,8 @@ void fs_close_custom(struct fs_file *file)
 	if (extra == nullptr) {
 		return;
 	}
-	std::erase(readingFileList, file);
+	//std::erase(readingFileList, file);
+	openedFilesNum--;
 
 	switch (extra->type) {
 	case CUSTOM_FILE_SD: {
@@ -308,14 +313,19 @@ fs_wait_read_custom(struct fs_file *file, fs_wait_cb callback_fn, void *callback
 	//if (readingFileList) {
 
 	//}
+
+	if (openedFilesNum > 2) {
+//		return 0;
+	}
+
 	/* not implemented in this example */
   LWIP_UNUSED_ARG(file);
   LWIP_UNUSED_ARG(callback_fn);
   LWIP_UNUSED_ARG(callback_arg);
   /* Return
-     - 1 if ready to read (at least one byte)
-     - 0 if reading should be delayed (call 'tcpip_callback(callback_fn, callback_arg)' when ready) */
-  return 0;
+     - 0 if ready to read (at least one byte)
+     - 1 if reading should be delayed (call 'tcpip_callback(callback_fn, callback_arg)' when ready) */
+  return 1;
 }
 #endif // LWIP_HTTPD_FS_ASYNC_READ
 
