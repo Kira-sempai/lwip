@@ -280,7 +280,7 @@ typedef struct fs_pextension fs_file_extension;
 #define CHECKSUM_CHECK_UDP              0
 #define CHECKSUM_CHECK_TCP              0
 
-#define TCP_TMR_INTERVAL       100  /* The TCP timer interval in milliseconds. */
+//#define TCP_TMR_INTERVAL       100  /* The TCP timer interval in milliseconds. */
 
 //#define LWIP_DEBUG
 
