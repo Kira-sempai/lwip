@@ -11,7 +11,7 @@
 #include <lwip/apps/fs.h>
 #include <lwip/apps/fs_custom_files.h>
 
-#define MY_DEBUG 0
+//#define MY_DEBUG 1
 
 #if MY_DEBUG
 #define MY_PRINT(X) printf X
@@ -23,7 +23,7 @@ extern "C"
 u8_t
 fs_canread_custom(struct fs_file *file);
 
-const char * const WebFolder = "WEB";
+static const char * const WebFolder = "WEB";
 
 static uint32_t getFileETag(const char *name)
 {
@@ -148,25 +148,33 @@ static int initSmallPageResponse(struct fs_file * const file, const char* const 
 }
 
 static int openSDFile(struct fs_file * const file, const char* const name) {
-	FIL * fileObject = new FIL;       /* File object */
+	FIL * fileObject = (FIL *)mem_clib_malloc(sizeof(FIL));       /* File object */
+
+	if (fileObject == nullptr) {
+		MY_PRINT(("err open file, not enough memory\n\r"));
+		return 0;
+	}
+
 	FRESULT fr;    				/* FatFs return code */
 
-	MY_PRINT(("opening file path %s\n\r", filePath));
+	MY_PRINT(("opening file path %s\n\r", name));
 	/* Open file */
 	fr = f_open(fileObject, (const TCHAR*)name, FA_READ);
 
 	if (fr != FR_OK) {
-		MY_PRINT(("open file %s %d error\n\r", name, fr));
-		delete fileObject;
+		MY_PRINT(("error open %d\n\r", fr));
+		mem_clib_free(fileObject);
 		return 0;
 	}
 
 	initFileStruct(file, f_size(fileObject), CUSTOM_FILE_SD, fileObject, getFileETag(name), nullptr);
 
-	MY_PRINT(("opened file %s\nsize %d\nptr %d\r\n",name, file->len, file));
+	MY_PRINT(("opened file ptr %d size %d\r\n", file, file->len));
 
 	return 1;
 }
+
+static std::vector<struct fs_file *> readingFileList;
 
 extern "C"
 int fs_open_custom(struct fs_file *file, const char *name)
@@ -176,6 +184,8 @@ int fs_open_custom(struct fs_file *file, const char *name)
 	if ((file == nullptr) || (name == nullptr)) {
 		return 0;
 	}
+
+	readingFileList.push_back(file);
 
 	switch(getFileType(name)) {
 	case CUSTOM_FILE_JSON       : { return initJSONResponse(file, name);}
@@ -196,12 +206,13 @@ void fs_close_custom(struct fs_file *file)
 	if (extra == nullptr) {
 		return;
 	}
+	std::erase(readingFileList, file);
 
 	switch (extra->type) {
 	case CUSTOM_FILE_SD: {
 		MY_PRINT(("closing file %d\r\n", file));
 		f_close(extra->fileObject);
-		delete extra->fileObject;
+		mem_clib_free(extra->fileObject);
 		break;
 	}
 	case CUSTOM_FILE_JSON:
@@ -236,6 +247,9 @@ int fs_read_custom(struct fs_file *file, char *buffer, int count) {
 				read = count;
 			}
 
+			if (read == 0) {
+				return 0;
+			}
 			MY_PRINT(("file %d reading %d bytes from pos %d\r\n", file, read, file->index));
 		}
 		else
@@ -290,7 +304,11 @@ extern "C"
 u8_t
 fs_wait_read_custom(struct fs_file *file, fs_wait_cb callback_fn, void *callback_arg)
 {
-  /* not implemented in this example */
+
+	//if (readingFileList) {
+
+	//}
+	/* not implemented in this example */
   LWIP_UNUSED_ARG(file);
   LWIP_UNUSED_ARG(callback_fn);
   LWIP_UNUSED_ARG(callback_arg);
