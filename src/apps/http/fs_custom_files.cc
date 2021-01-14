@@ -314,9 +314,11 @@ fs_wait_read_custom(struct fs_file *file, fs_wait_cb callback_fn, void *callback
 
 	//}
 
-	if (openedFilesNum > 2) {
-//		return 0;
+
+	if (openedFilesNum > 3) {
+		return 1;
 	}
+
 
 	/* not implemented in this example */
   LWIP_UNUSED_ARG(file);
@@ -325,7 +327,7 @@ fs_wait_read_custom(struct fs_file *file, fs_wait_cb callback_fn, void *callback
   /* Return
      - 0 if ready to read (at least one byte)
      - 1 if reading should be delayed (call 'tcpip_callback(callback_fn, callback_arg)' when ready) */
-  return 1;
+  return 0;
 }
 #endif // LWIP_HTTPD_FS_ASYNC_READ
 
