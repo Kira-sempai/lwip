@@ -106,7 +106,7 @@ void  memt_free (void*);
 #define HTTPD_MAX_RETRIES                   10
 
 /** The poll delay is X*500ms */
-#define HTTPD_POLL_INTERVAL                 1
+#define HTTPD_POLL_INTERVAL                 4
 
 /** Priority for tcp pcbs created by HTTPD (very low by default).
  *  Lower priorities get killed first when running out of memory.
