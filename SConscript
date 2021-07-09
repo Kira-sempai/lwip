@@ -1,10 +1,7 @@
 Import('*')
 
 
-if targetEnv.has_key('CFG_MCU_STM32F105') or targetEnv.has_key('CFG_MCU_STM32F103') :
-	targetEnv.RegisterModule('lwip', depend=['kernel', 'rtc'], init=True, reset=True, run=True)
-else :
-	targetEnv.RegisterModule('lwip', depend=['kernel'], init=True, reset=True, run=True)
+targetEnv.RegisterModule('lwip', depend=['kernel'], init=True, reset=True, run=True)
 
 sources = Split("""
 	sys_arch.c
