@@ -151,6 +151,8 @@ void  memt_free (void*);
 
 #define LWIP_HOOK_FILENAME <lwip/lwip_hooks.h>
 
+#define LWIP_HTTPD_FILE_STATE         1
+#define LWIP_HTTPD_FILE_EXTENSION     0
 /**
  * LWIP_DHCP_DOES_ACD_CHECK==1: Perform address conflict detection on the dhcp address.
  */
