@@ -67,7 +67,7 @@ static void initFileStruct(struct fs_file *const file, const int len, eCustomFil
 	file->flags &= ~FS_FILE_FLAGS_HEADER_INCLUDED;	// no "HTTP/1.0 200 OK"
 	file->index = 0;				// position in file to start read with
 	file->len = len;			// file size - we don't know it before we start to make response
-	file->pextension = extra;		// put extra data to fs_file structure
+	file->state = (void*)extra;		// put extra data to fs_file structure
 	file->data = NULL;				// data is not exists, for now
 }
 
@@ -205,7 +205,7 @@ extern "C"
 void fs_close_custom(struct fs_file *file)
 {
 	PRINT_LOG(CFG_DEBUG_LOG_NET, LOG_LEVEL_LOW_PRIORITY, "close %p\r\n", file);
-	fs_file_extension* const extra = file->pextension;
+	fs_file_extension* const extra = (fs_file_extension*)file->state;
 
 	if (extra == nullptr) {
 		return;
@@ -237,7 +237,7 @@ int fs_read_async_custom(struct fs_file *file, char *buffer, int count, fs_wait_
 #else
 int fs_read_custom(struct fs_file *file, char *buffer, int count) {
 #endif
-	fs_file_extension* const extra = file->pextension;
+	fs_file_extension* const extra = (fs_file_extension*)file->state;
 
 	switch (extra->type) {
 	case CUSTOM_FILE_SD:
@@ -297,8 +297,9 @@ fs_canread_custom(struct fs_file *file)
 {
   /* If reading would block, return 0 and implement fs_wait_read_custom() to call the
      supplied callback if reading works. */
+	fs_file_extension* const extra = (fs_file_extension*)file->state;
 	const PostResponse * const jsonResponse =
-			file->pextension->jsonResponse;
+			extra->jsonResponse;
 	if (jsonResponse != nullptr) {
 		return jsonResponse->isResponseReady() ? 1 : 0;
 	}
@@ -349,3 +350,17 @@ void setCookieSessionID(fs_file_extension * const pextension, const uint32_t ses
     pextension->jsonResponse->setCookieSessionID(session_id);
   }
 }
+
+extern "C"
+void *
+fs_state_init(struct fs_file *file, const char *name) {
+	return nullptr;
+}
+
+extern "C"
+void fs_state_free(struct fs_file *file, void *state) {
+}
+
+
+
+

@@ -929,7 +929,7 @@ get_http_headers(struct http_state *hs, const char *uri)
     hs->hdr_pos = 0;
     return;
   } else {
-    hs->hdrs[HDR_STRINGS_IDX_HTTP_STATUS] = g_psHTTPHeaderStrings[HTTP_HDR_OK];
+    hs->hdrs[HDR_STRINGS_IDX_HTTP_STATUS] = g_psHTTPHeaderStrings[HTTP_HDR_OK_11];
   }
 
   /* Determine if the URI has any variables and, if so, temporarily remove
@@ -971,8 +971,8 @@ get_http_headers(struct http_state *hs, const char *uri)
     *vars = '?';
   }
 
-  if (hs->handle && hs->handle->is_custom_file){
-    char * const eTagHeader = getETagHeader(hs->handle->pextension);
+  if (hs->handle && hs->handle->flags&FS_FILE_FLAGS_CUSTOM){
+    char * const eTagHeader = getETagHeader(hs->handle->state);
     if (eTagHeader != NULL) {
       hs->hdrs[HDR_STRINGS_IDX_ETAG] = eTagHeader;
       hs->hdrs[HDR_STRINGS_IDX_CACHE_CONTROL_MAX_AGE] = g_psHTTPHeaderStrings[CACHE_CONTROL_MAX_AGE];
@@ -1863,8 +1863,8 @@ http_post_rxpbuf(struct http_state *hs, struct pbuf *p)
     /* application error or POST finished */
     err_t e = http_handle_post_finished(hs);
 
-    if (hs->file_handle.is_custom_file){
-      setCookieSessionID(hs->handle->pextension, hs->session_id);
+    if (hs->file_handle.flags&FS_FILE_FLAGS_CUSTOM){
+      setCookieSessionID(hs->handle->state, hs->session_id);
     }
 
     return e;
@@ -2395,8 +2395,8 @@ http_find_file(struct http_state *hs, const char *uri, int is_09)
     if (err == ERR_OK) {
       file = &hs->file_handle;
 
-       if (hs->file_handle.is_custom_file){
-         setCookieSessionID(hs->file_handle.pextension, hs->session_id);
+       if (file->flags & FS_FILE_FLAGS_CUSTOM){
+         setCookieSessionID(hs->file_handle.state, hs->session_id);
        }
 
     } else {
