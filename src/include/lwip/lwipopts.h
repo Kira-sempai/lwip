@@ -34,6 +34,15 @@ void  memt_free (void*);
 #define mem_clib_malloc memt_malloc
 #define mem_clib_calloc memt_calloc
 
+
+/* ---------- Memory options ---------- */
+/* MEM_ALIGNMENT: should be set to the alignment of the CPU for which
+   lwIP is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
+   byte alignment -> define MEM_ALIGNMENT to 2. */
+#define MEM_ALIGNMENT           4
+
+
+
 #ifdef CFG_WIFI_API
 #define LWIP_ALTCP 1
 #endif
@@ -288,6 +297,7 @@ typedef struct fs_pextension fs_file_extension;
 
 #ifdef LWIP_DEBUG
 #define LWIP_DBG_MIN_LEVEL         LWIP_DBG_LEVEL_ALL
+#define UDP_DEBUG LWIP_DBG_ON
 //#define MEMP_DEBUG LWIP_DBG_ON
 //#define PBUF_DEBUG LWIP_DBG_ON
 //#define SYS_DEBUG LWIP_DBG_ON
@@ -297,7 +307,7 @@ typedef struct fs_pextension fs_file_extension;
 //#define TIMERS_DEBUG LWIP_DBG_OFF
 //#define DHCP_DEBUG LWIP_DBG_ON
 //#define TCP_QLEN_DEBUG                  LWIP_DBG_ON
-#define HTTPD_DEBUG         LWIP_DBG_ON
+//#define HTTPD_DEBUG         LWIP_DBG_ON
 //#define LWIP_STATS_DISPLAY 1
 #endif
 
