@@ -280,7 +280,7 @@
     copied from pbuf into this a global buffer when pbuf- or packet-queues
     are received - otherwise the input pbuf is used directly) */
 #if !defined LWIP_HTTPD_MAX_REQ_LENGTH || defined __DOXYGEN__
-#define LWIP_HTTPD_MAX_REQ_LENGTH           LWIP_MIN(1023, (LWIP_HTTPD_REQ_QUEUELEN * PBUF_POOL_BUFSIZE))
+#define LWIP_HTTPD_MAX_REQ_LENGTH           LWIP_MIN(1024, (LWIP_HTTPD_REQ_QUEUELEN * PBUF_POOL_BUFSIZE))
 #endif
 #endif /* LWIP_HTTPD_SUPPORT_REQUESTLIST */
 
