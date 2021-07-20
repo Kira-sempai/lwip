@@ -318,6 +318,7 @@ fs_wait_read_custom(struct fs_file *file, fs_wait_cb callback_fn, void *callback
 
 	if (openedFilesNum > 3) {
 //		return 1;
+		MY_PRINT(("fwrc: too many files open\n\r"));
 	}
 
 
