@@ -2004,12 +2004,14 @@ http_parse_request(struct pbuf *inp, struct http_state *hs, struct altcp_pcb *pc
       if (!strncmp(data, "GET ", 4)) {
         sp1 = data + 3;
         /* received GET request */
+        LWIP_DEBUGF(HTTPD_DEBUG | LWIP_DBG_TRACE, ("Received GET request\n"));
 #if LWIP_HTTPD_SUPPORT_POST
       } else if (!strncmp(data, "POST ", 5)) {
         /* store request type */
         is_post = 1;
         sp1 = data + 4;
         /* received POST request */
+        LWIP_DEBUGF(HTTPD_DEBUG | LWIP_DBG_TRACE, ("Received POST request\n"));
 #endif /* LWIP_HTTPD_SUPPORT_POST */
       } else {
         /* null-terminate the METHOD (pbuf is freed anyway when returning) */
