@@ -144,6 +144,9 @@ void  memt_free (void*);
 
 #define TCP_OVERSIZE                    0
 
+#define TCP_TMR_INTERVAL                5
+#define TCP_SLOW_INTERVAL               500
+
 /*
    ------------------------------------------------
    ---------- Network Interfaces options ----------
