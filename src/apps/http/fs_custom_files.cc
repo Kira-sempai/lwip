@@ -272,6 +272,13 @@ int fs_read_custom(struct fs_file *file, char *buffer, int count) {
 		DebugTime dtm("readjson", 80);
 
 #if LWIP_HTTPD_FS_ASYNC_READ
+
+		// not very good for json generation
+		if (count < 20) {
+			MY_PRINT(("buffer is too small!!!\n\r"));
+			return FS_READ_DELAYED;
+		}
+
 		if (!fs_canread_custom(file)) {
 			return FS_READ_DELAYED;
 		}
