@@ -58,7 +58,7 @@ void  memt_free (void*);
    byte alignment -> define MEM_ALIGNMENT to 2. */
 #define MEM_ALIGNMENT           4
 
-#define MEM_SIZE                        16384
+#define MEM_SIZE                        (16384*2)
 
 /*
    ------------------------------------------------
@@ -68,11 +68,11 @@ void  memt_free (void*);
 
 #define MEMP_NUM_RAW_PCB                30
 
-#define MEMP_NUM_TCP_PCB                1
-#define MEMP_NUM_TCP_PCB_LISTEN         1
-#define MEMP_NUM_TCP_SEG                8
+#define MEMP_NUM_TCP_PCB                10
+#define MEMP_NUM_TCP_PCB_LISTEN         10
+#define MEMP_NUM_TCP_SEG                16
 
-#define PBUF_POOL_SIZE                  8 // with NO_SYS=0, might need to increase this to 32 to avoid deadlocks
+#define PBUF_POOL_SIZE                  16 // with NO_SYS=0, might need to increase this to 32 to avoid deadlocks
 
 
 /*
@@ -134,7 +134,7 @@ void  memt_free (void*);
 #define TCP_SND_BUF						(6*TCP_MSS)
 #endif
 
-//#define TCP_SND_QUEUELEN                20
+#define TCP_SND_QUEUELEN                20
 
 #define TCP_LISTEN_BACKLOG              1
 
@@ -144,7 +144,7 @@ void  memt_free (void*);
 
 #define TCP_OVERSIZE                    0
 
-#define TCP_TMR_INTERVAL                5
+#define TCP_TMR_INTERVAL                10
 #define TCP_SLOW_INTERVAL               500
 
 /*
@@ -223,9 +223,9 @@ void  memt_free (void*);
 
 #if defined(MCU_GROUP_IS_STM32F1)
 // buf size divided by 2
-#define HTTP_MEMUSE_LEVEL_1 (8*1024)
+#define HTTP_MEMUSE_LEVEL_1 (12*1024)
 // buf size divided by 4
-#define HTTP_MEMUSE_LEVEL_2 (12*1024)
+#define HTTP_MEMUSE_LEVEL_2 (16*1024)
 
 #define HTTP_MEM_RESERVE (4*1024)
 
