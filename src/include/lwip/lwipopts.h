@@ -68,11 +68,11 @@ void  memt_free (void*);
 
 #define MEMP_NUM_RAW_PCB                30
 
-#define MEMP_NUM_TCP_PCB                20
-#define MEMP_NUM_TCP_PCB_LISTEN         20
-#define MEMP_NUM_TCP_SEG                20
+#define MEMP_NUM_TCP_PCB                1
+#define MEMP_NUM_TCP_PCB_LISTEN         1
+#define MEMP_NUM_TCP_SEG                8
 
-#define PBUF_POOL_SIZE                  16 // with NO_SYS=0, might need to increase this to 32 to avoid deadlocks
+#define PBUF_POOL_SIZE                  8 // with NO_SYS=0, might need to increase this to 32 to avoid deadlocks
 
 
 /*
@@ -127,14 +127,14 @@ void  memt_free (void*);
 
 
 #if defined(MCU_GROUP_IS_STM32F1)
-#define TCP_SND_BUF						(2*TCP_MSS)
+#define TCP_SND_BUF						(6*TCP_MSS)
 #elif defined(MCU_GROUP_IS_STM32F2)
 #define TCP_SND_BUF						(6*TCP_MSS)
 #elif defined(MCU_GROUP_IS_STM32F7)
 #define TCP_SND_BUF						(6*TCP_MSS)
 #endif
 
-#define TCP_SND_QUEUELEN                20
+//#define TCP_SND_QUEUELEN                20
 
 #define TCP_LISTEN_BACKLOG              1
 
