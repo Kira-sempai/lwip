@@ -144,7 +144,7 @@ void  memt_free (void*);
 
 #define TCP_OVERSIZE                    0
 
-#define TCP_TMR_INTERVAL                10
+#define TCP_TMR_INTERVAL                100
 #define TCP_SLOW_INTERVAL               500
 
 /*
