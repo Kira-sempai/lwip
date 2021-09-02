@@ -32,6 +32,7 @@
 #ifndef __LWIPOPTS_H__
 #define __LWIPOPTS_H__
 
+#if 0
 /** Set this to 1 to support SSI (Server-Side-Includes) */
 #define LWIP_HTTPD_SSI            0
 
@@ -334,5 +335,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define MD5_SUPPORT             1      /* Set > 0 for MD5 (see also CHAP) */
 
 #endif /* PPP_SUPPORT */
+
+#endif
 
 #endif /* __LWIPOPTS_H__ */
