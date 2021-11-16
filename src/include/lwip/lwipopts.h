@@ -58,8 +58,8 @@ void  memt_free (void*);
    byte alignment -> define MEM_ALIGNMENT to 2. */
 #define MEM_ALIGNMENT           4
 
-#define MEM_SIZE                        (16384*2)
-
+//#define MEM_SIZE                        (16384*2)
+#define MEM_SIZE                        16384
 /*
    ------------------------------------------------
    ---------- Internal Memory Pool Sizes ----------
@@ -72,7 +72,8 @@ void  memt_free (void*);
 #define MEMP_NUM_TCP_PCB_LISTEN         1
 #define MEMP_NUM_TCP_SEG                8
 
-#define PBUF_POOL_SIZE                  32 // with NO_SYS=0, might need to increase this to 32 to avoid deadlocks
+//#define PBUF_POOL_SIZE                  32 // with NO_SYS=0, might need to increase this to 32 to avoid deadlocks
+#define PBUF_POOL_SIZE                  8
 
 
 /*
@@ -134,7 +135,7 @@ void  memt_free (void*);
 #define TCP_SND_BUF						(6*TCP_MSS)
 #endif
 
-#define TCP_SND_QUEUELEN                30
+//#define TCP_SND_QUEUELEN                30
 
 #define TCP_LISTEN_BACKLOG              1
 
@@ -144,8 +145,10 @@ void  memt_free (void*);
 
 #define TCP_OVERSIZE                    0
 
+#ifdef CFG_SWK
 #define TCP_TMR_INTERVAL                250
 #define TCP_SLOW_INTERVAL               500
+#endif
 
 /*
    ------------------------------------------------
@@ -277,10 +280,10 @@ void  memt_free (void*);
  * - number of times pcb->poll is called -> default is 4*500ms = 2s;
  * - reset when pcb->sent is called
  */
-#define HTTPD_MAX_RETRIES                   20
+#define HTTPD_MAX_RETRIES                   10
 
 /** The poll delay is X*500ms */
-#define HTTPD_POLL_INTERVAL                 2
+#define HTTPD_POLL_INTERVAL                 4
 
 /** Priority for tcp pcbs created by HTTPD (very low by default).
  *  Lower priorities get killed first when running out of memory.
