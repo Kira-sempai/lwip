@@ -148,6 +148,8 @@ void  memt_free (void*);
 #ifdef CFG_SWK
 #define TCP_TMR_INTERVAL                250
 #define TCP_SLOW_INTERVAL               500
+#else
+#define TCP_TMR_INTERVAL                500
 #endif
 
 /*
