@@ -5,9 +5,9 @@
 #include <debug/debug_log.h>
 #include <os/StringBuffer.h>
 #include <Debug/DebugTime.h>
-#include <Network/filenameReducer.h>
-#include <Network/post.h>
-#include <Network/SmallPages.h>
+#include <mNetwork/filenameReducer.h>
+#include <mNetwork/post.h>
+#include <mNetwork/SmallPages.h>
 #include <lwip/lwip_hooks.h>
 #include <lwip/apps/fs.h>
 #include <lwip/apps/fs_custom_files.h>
