@@ -84,6 +84,15 @@
 #include LWIP_HOOK_FILENAME
 #endif
 
+u8_t LWIP_TCP_OPT_LENGTH(const u8_t flags) {
+  u8_t len = 0;
+  if (flags & TF_SEG_OPTS_MSS      ) len += LWIP_TCP_OPT_LEN_MSS;
+  if (flags & TF_SEG_OPTS_TS       ) len += LWIP_TCP_OPT_LEN_TS_OUT;
+  if (flags & TF_SEG_OPTS_WND_SCALE) len += LWIP_TCP_OPT_LEN_WS_OUT;
+  if (flags & TF_SEG_OPTS_SACK_PERM) len += LWIP_TCP_OPT_LEN_SACK_PERM_OUT;
+  return len;
+}
+
 /* Allow to add custom TCP header options by defining this hook */
 #ifdef LWIP_HOOK_TCP_OUT_TCPOPT_LENGTH
 #define LWIP_TCP_OPT_LENGTH_SEGMENT(flags, pcb) LWIP_HOOK_TCP_OUT_TCPOPT_LENGTH(pcb, LWIP_TCP_OPT_LENGTH(flags))
