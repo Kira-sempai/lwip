@@ -133,6 +133,8 @@ void  memt_free (void*);
 #define TCP_SND_BUF						(6*TCP_MSS)
 #elif defined(MCU_GROUP_IS_STM32F7)
 #define TCP_SND_BUF						(6*TCP_MSS)
+#elif defined(MCU_GROUP_IS_AT32F4)
+#define TCP_SND_BUF						(6*TCP_MSS)
 #endif
 
 //#define TCP_SND_QUEUELEN                30
