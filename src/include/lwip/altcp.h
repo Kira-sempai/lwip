@@ -100,6 +100,7 @@ void altcp_sent(struct altcp_pcb *conn, altcp_sent_fn sent);
 void altcp_poll(struct altcp_pcb *conn, altcp_poll_fn poll, u8_t interval);
 void altcp_err(struct altcp_pcb *conn, altcp_err_fn err);
 
+void  altcp_accepted(struct altcp_pcb *conn); //deprecated, for compatibility only
 void  altcp_recved(struct altcp_pcb *conn, u16_t len);
 err_t altcp_bind(struct altcp_pcb *conn, const ip_addr_t *ipaddr, u16_t port);
 err_t altcp_connect(struct altcp_pcb *conn, const ip_addr_t *ipaddr, u16_t port, altcp_connected_fn connected);
@@ -171,7 +172,7 @@ enum tcp_state altcp_dbg_get_tcp_state(struct altcp_pcb *conn);
 #define altcp_sent tcp_sent
 #define altcp_poll tcp_poll
 #define altcp_err tcp_err
-
+#define altcp_accepted tcp_accepted
 #define altcp_recved tcp_recved
 #define altcp_bind tcp_bind
 #define altcp_connect tcp_connect
