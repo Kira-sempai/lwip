@@ -254,11 +254,11 @@ void  memt_free (void*);
 
 #elif defined(MCU_GROUP_IS_AT32F4)
 // buf size divided by 2
-#define HTTP_MEMUSE_LEVEL_1 (16*1024)
+#define HTTP_MEMUSE_LEVEL_1 (12*1024)
 // buf size divided by 4
-#define HTTP_MEMUSE_LEVEL_2 (32*1024)
+#define HTTP_MEMUSE_LEVEL_2 (16*1024)
 
-#define HTTP_MEM_RESERVE (12*1024)
+#define HTTP_MEM_RESERVE (6*1024)
 
 #else
 #error "MCU is not defined"
