@@ -34,7 +34,7 @@ enum  {
 static u16_t http_bufLimit(const int avail_mem, const uint8_t priority) {
 	enum {
 		MINIMUM_BUFFER_SIZE = 64,
-		MAXIMUM_BUFFER_SIZE = 8*TCP_MSS,
+		MAXIMUM_BUFFER_SIZE = 2*TCP_MSS,
 	};
 
 //	if (avail_mem < 0) {
