@@ -41,8 +41,7 @@ void  memt_free (void*);
    byte alignment -> define MEM_ALIGNMENT to 2. */
 #define MEM_ALIGNMENT           4
 
-//#define MEM_SIZE                        (16384*2)
-#define MEM_SIZE                        16384
+
 
 #ifdef CFG_WIFI_API
 #define LWIP_ALTCP 1
@@ -55,9 +54,9 @@ void  memt_free (void*);
 
 #define TCP_SND_BUF						(2*TCP_MSS)
 // buf size divided by 2
-#define HTTP_MEMUSE_LEVEL_1 (12*1024)
+#define HTTP_MEMUSE_LEVEL_1 (8*1024)
 // buf size divided by 4
-#define HTTP_MEMUSE_LEVEL_2 (16*1024)
+#define HTTP_MEMUSE_LEVEL_2 (12*1024)
 
 #define HTTP_MEM_RESERVE (4*1024)
 
