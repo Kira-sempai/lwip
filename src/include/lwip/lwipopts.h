@@ -179,7 +179,8 @@ void  memt_free (void*);
 typedef struct fs_pextension fs_file_extension;
 
 
-#define HTTPD_ADDITIONAL_CONTENT_TYPES {"gz", HTTP_HDR_HTMLZ}
+#define HTTPD_ADDITIONAL_CONTENT_TYPES	{  "gz", HTTP_HDR_HTMLZ}, \
+										{ "svg", HTTP_HDR_SVG}
 
 /*
    ----------------------------------
