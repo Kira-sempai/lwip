@@ -160,6 +160,7 @@ typedef struct {
 } default_filename;
 
 static const default_filename httpd_default_filenames[] = {
+  {"/index.html.gz",  0 },
   {"/index.shtml", 1 },
   {"/index.ssi",   1 },
   {"/index.shtm",  1 },
@@ -736,7 +737,7 @@ get_tag_insert(struct http_state *hs)
 
 static uint8_t
 gzippedFileFound(const char * const uri) {
-
+#if 0
   unsigned char i;
   char *tmp;
   char *name = NULL;
@@ -760,7 +761,7 @@ gzippedFileFound(const char * const uri) {
       }
     }
   }
-
+#endif
   return 0;
 }
 
