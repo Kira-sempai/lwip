@@ -737,7 +737,7 @@ get_tag_insert(struct http_state *hs)
 
 static uint8_t
 gzippedFileFound(const char * const uri) {
-#if 0
+
   unsigned char i;
   char *tmp;
   char *name = NULL;
@@ -761,7 +761,7 @@ gzippedFileFound(const char * const uri) {
       }
     }
   }
-#endif
+
   return 0;
 }
 
