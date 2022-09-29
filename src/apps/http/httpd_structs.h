@@ -67,7 +67,7 @@ static const char *const g_psHTTPHeaderStrings[] = {
 #define HTTP_CONTENT_TYPE(contenttype) "Content-Type: "contenttype"\r\n\r\n"
 #define HTTP_CONTENT_TYPE_ENCODING(contenttype, encoding) "Content-Type: "contenttype"\r\nContent-Encoding: "encoding"\r\n\r\n"
 
-#define HTTP_HDR_HTML           HTTP_CONTENT_TYPE("text/html")
+#define HTTP_HDR_HTML           HTTP_CONTENT_TYPE("text/html; charset=utf-8")
 #define HTTP_HDR_HTMLZ          HTTP_CONTENT_TYPE_ENCODING("text/html", "gzip")
 #define HTTP_HDR_SSI            HTTP_CONTENT_TYPE("text/html\r\nExpires: Fri, 10 Apr 2008 14:00:00 GMT\r\nPragma: no-cache")
 #define HTTP_HDR_GIF            HTTP_CONTENT_TYPE("image/gif")
@@ -88,7 +88,7 @@ static const char *const g_psHTTPHeaderStrings[] = {
 #define HTTP_HDR_SVG            HTTP_CONTENT_TYPE("image/svg+xml")
 #define HTTP_HDR_SVGZ           HTTP_CONTENT_TYPE_ENCODING("image/svg+xml", "gzip")
 
-#define HTTP_HDR_DEFAULT_TYPE   HTTP_CONTENT_TYPE("text/plain")
+#define HTTP_HDR_DEFAULT_TYPE   HTTP_CONTENT_TYPE("text/plain; charset=utf-8")
 
 /** A list of extension-to-HTTP header strings (see outdated RFC 1700 MEDIA TYPES
  * and http://www.iana.org/assignments/media-types for registered content types
