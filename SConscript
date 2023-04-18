@@ -4,7 +4,6 @@ Import('*')
 targetEnv.RegisterModule('lwip', depend=['kernel'], init=True, reset=True, run=True)
 
 sources = Split("""
-	sys_arch.c
 	
 	src/api/err.c
 	
@@ -51,9 +50,24 @@ sources.extend([
 	'src/core/sys.c',
 	])
 
+if 'CFG_ENABLE_FREERTOS' in targetEnv:
+	sources.extend([
+		'contrib/ports/freertos/sys_arch.c',
+	])
+else:
+	sources.extend([
+		'sys_arch.c',
+	])
+	
+	
+
 program_headers.append(File('src/include/lwip/lwip_hooks.h'))
 
 program_sources.extend(File(sources))
 program_objects.extend(targetEnv.StaticObject(sources))
 
-targetEnv['CPPPATH'].extend( [ Dir('src/include')] )
+targetEnv['CPPPATH'].extend( [
+	 Dir('src/include'),
+	 Dir('contrib/ports'),
+	 
+	 ] )
