@@ -43,7 +43,7 @@ void  memt_free (void*);
 
 
 
-#ifdef CFG_WIFI_API
+#if CFG_WIFI_API
 #define LWIP_ALTCP 1
 #endif
 
