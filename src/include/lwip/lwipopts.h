@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <hardware/mcu.h>
 
+#ifdef CFG_THREADED_LWIP
+#include <cmsis_os.h>
+#endif
+
 // --- Memory ---
 #define MEM_LIBC_MALLOC 1
 #define MEMP_MEM_MALLOC 1
@@ -281,8 +285,11 @@ typedef struct fs_pextension fs_file_extension;
 
 // this block is only used if NO_SYS==0
 #if NO_SYS == 0
-//#define DEFAULT_THREAD_STACKSIZE 0x40
-//#define DEFAULT_THREAD_PRIO  30
+#define TCPIP_MBOX_SIZE          10 // number of entries
+#define TCPIP_THREAD_STACKSIZE   0x200
+#define TCPIP_THREAD_PRIO        osPriorityAboveNormal
+#define DEFAULT_THREAD_STACKSIZE 0x40
+#define DEFAULT_THREAD_PRIO      osPriorityNormal
 #endif
 
 //#define DEFAULT_RAW_RECVMBOX_SIZE 20
