@@ -24,9 +24,9 @@
 extern "C" {
 #endif
 
-void* memt_calloc (size_t, size_t);
-void* memt_malloc (size_t);
-void  memt_free (void*);
+void  hosted_free(void* ptr);
+void* hosted_malloc(size_t size);
+void* hosted_calloc(size_t blk_no, size_t size);
 
 #ifdef __cplusplus
 }
@@ -34,9 +34,9 @@ void  memt_free (void*);
 // --- Memory ---
 
 
-#define mem_clib_free memt_free
-#define mem_clib_malloc memt_malloc
-#define mem_clib_calloc memt_calloc
+#define mem_clib_free   hosted_free
+#define mem_clib_malloc hosted_malloc
+#define mem_clib_calloc hosted_calloc
 
 
 /* ---------- Memory options ---------- */
