@@ -16,27 +16,6 @@
 // --- Memory ---
 #define MEM_LIBC_MALLOC 1
 #define MEMP_MEM_MALLOC 1
-//#define mem_free osFree
-//#define mem_malloc osAlloc
-//#define mem_calloc osCAlloc
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void  hosted_free(void* ptr);
-void* hosted_malloc(size_t size);
-void* hosted_calloc(size_t blk_no, size_t size);
-
-#ifdef __cplusplus
-}
-#endif
-// --- Memory ---
-
-
-#define mem_clib_free   hosted_free
-#define mem_clib_malloc hosted_malloc
-#define mem_clib_calloc hosted_calloc
 
 
 /* ---------- Memory options ---------- */
@@ -311,19 +290,21 @@ typedef struct fs_pextension fs_file_extension;
 
 //#define TCP_TMR_INTERVAL       100  /* The TCP timer interval in milliseconds. */
 
-//#define LWIP_DEBUG
+#define LWIP_DEBUG
 
 #ifdef LWIP_DEBUG
 #define LWIP_DBG_MIN_LEVEL         LWIP_DBG_LEVEL_ALL
-#define UDP_DEBUG LWIP_DBG_ON
+//#define UDP_DEBUG LWIP_DBG_ON
 //#define MEMP_DEBUG LWIP_DBG_ON
 //#define PBUF_DEBUG LWIP_DBG_ON
 //#define SYS_DEBUG LWIP_DBG_ON
-//#define TCP_INPUT_DEBUG LWIP_DBG_ON
-//#define TCP_OUTPUT_DEBUG LWIP_DBG_ON
-//#define TCP_DEBUG LWIP_DBG_ON
+#define TCP_INPUT_DEBUG LWIP_DBG_ON
+#define TCP_OUTPUT_DEBUG LWIP_DBG_ON
+#define TCP_DEBUG LWIP_DBG_ON
+#define ETHARP_DEBUG LWIP_DBG_ON
+#define IP_DEBUG LWIP_DBG_ON
 //#define TIMERS_DEBUG LWIP_DBG_OFF
-//#define DHCP_DEBUG LWIP_DBG_ON
+#define DHCP_DEBUG LWIP_DBG_ON
 //#define TCP_QLEN_DEBUG                  LWIP_DBG_ON
 //#define HTTPD_DEBUG         LWIP_DBG_ON
 //#define LWIP_STATS_DISPLAY 1
