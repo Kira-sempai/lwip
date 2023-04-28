@@ -149,7 +149,7 @@ static int initSmallPageResponse(struct fs_file * const file, const char* const 
 }
 
 static int openSDFile(struct fs_file * const file, const char* const name) {
-	FIL * fileObject = (FIL *)mem_clib_malloc(sizeof(FIL));       /* File object */
+	FIL * fileObject = (FIL *)malloc(sizeof(FIL));       /* File object */
 
 	if (fileObject == nullptr) {
 		MY_PRINT(("err open file, not enough memory\n\r"));
@@ -164,7 +164,7 @@ static int openSDFile(struct fs_file * const file, const char* const name) {
 
 	if (fr != FR_OK) {
 		MY_PRINT(("error open %d\n\r", fr));
-		mem_clib_free(fileObject);
+		free(fileObject);
 		return 0;
 	}
 
@@ -217,7 +217,7 @@ void fs_close_custom(struct fs_file *file)
 	case CUSTOM_FILE_SD: {
 		MY_PRINT(("closing file %d\r\n", file));
 		f_close(extra->fileObject);
-		mem_clib_free(extra->fileObject);
+		free(extra->fileObject);
 		break;
 	}
 	case CUSTOM_FILE_JSON:
