@@ -265,7 +265,7 @@ typedef struct fs_pextension fs_file_extension;
 // this block is only used if NO_SYS==0
 #if NO_SYS == 0
 #define TCPIP_MBOX_SIZE          10 // number of entries
-#define TCPIP_THREAD_STACKSIZE   0x200
+#define TCPIP_THREAD_STACKSIZE   0x1000
 #define TCPIP_THREAD_PRIO        osPriorityAboveNormal
 #define DEFAULT_THREAD_STACKSIZE 0x40
 #define DEFAULT_THREAD_PRIO      osPriorityNormal
