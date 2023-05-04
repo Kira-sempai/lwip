@@ -237,7 +237,7 @@ typedef struct fs_pextension fs_file_extension;
 /** Set this to 1 to support HTTP POST */
 #define LWIP_HTTPD_SUPPORT_POST   1
 
-#define MEM_SIZE                        16384
+#define MEM_SIZE                        0x4000
 #define PBUF_POOL_SIZE                  8 // with NO_SYS=0, might need to increase this to 32 to avoid deadlocks
 
 /**
@@ -271,10 +271,10 @@ typedef struct fs_pextension fs_file_extension;
 #define DEFAULT_THREAD_PRIO      osPriorityNormal
 #endif
 
-//#define DEFAULT_RAW_RECVMBOX_SIZE 20
-//#define DEFAULT_UDP_RECVMBOX_SIZE 20
-//#define DEFAULT_TCP_RECVMBOX_SIZE 20
-//#define DEFAULT_ACCEPTMBOX_SIZE 2
+#define DEFAULT_RAW_RECVMBOX_SIZE 20
+#define DEFAULT_UDP_RECVMBOX_SIZE 20
+#define DEFAULT_TCP_RECVMBOX_SIZE 20
+#define DEFAULT_ACCEPTMBOX_SIZE 2
 
 //#define TCPIP_MBOX_SIZE 20 // number of entries
 //#define TCPIP_THREAD_STACKSIZE 0x1E0
