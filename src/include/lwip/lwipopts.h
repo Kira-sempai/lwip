@@ -281,16 +281,16 @@ typedef struct fs_pextension fs_file_extension;
 //#define TCPIP_THREAD_PRIO    130
 // ------------------------------------
 
-#define CHECKSUM_GEN_IP                 0
+#define CHECKSUM_GEN_IP                 1
 #define CHECKSUM_GEN_UDP                0
-#define CHECKSUM_GEN_TCP                0
+#define CHECKSUM_GEN_TCP                1
 #define CHECKSUM_CHECK_IP               0
 #define CHECKSUM_CHECK_UDP              0
 #define CHECKSUM_CHECK_TCP              0
 
 //#define TCP_TMR_INTERVAL       100  /* The TCP timer interval in milliseconds. */
 
-#define LWIP_DEBUG
+//#define LWIP_DEBUG
 
 #ifdef LWIP_DEBUG
 #define LWIP_DBG_MIN_LEVEL         LWIP_DBG_LEVEL_ALL
