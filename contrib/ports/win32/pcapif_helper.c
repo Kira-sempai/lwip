@@ -10,6 +10,8 @@
 
 #include "lwip/arch.h"
 
+#include <config.h>
+
 #ifdef WIN32
 
 #define WIN32_LEAN_AND_MEAN
@@ -19,7 +21,13 @@
 #endif
 #include <windows.h>
 #include <packet32.h>
+
+#if CFG_USE_NDIS_INCLUDE
+#include <ndis.h>
+#else
 #include <ntddndis.h>
+#endif
+
 #ifdef _MSC_VER
 #pragma warning ( pop )
 #endif
