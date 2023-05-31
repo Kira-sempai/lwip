@@ -44,6 +44,11 @@ sources = Split("""
 
 	""")
 
+if 'SIMULATION' in targetEnv:
+	sources.append('contrib/ports/win32/pcapif.c')
+	sources.append('contrib/ports/win32/pcapif_helper.c')
+	sources.append('contrib/ports/win32/sys_arch.c')
+
 # fuer NO_SYS=0 notwendig
 sources.extend([
 	'src/api/tcpip.c',

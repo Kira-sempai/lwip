@@ -2,17 +2,20 @@
  * Architecture wrapping functions for LWIP
  */
 
+#include <config.h>
+
 #include <arch/sys_arch.h>
 
 #if NO_SYS
-
+#ifndef SIMULATION
 #include <hardware/systimer.h>
+
 
 u32_t sys_now(void)
 {
 	return timerGetAbsoluteTime();
 }
-
+#endif
 #else // NO_SYS
 #include <lwip/sys.h>
 #include <kernel/malloc.h>
