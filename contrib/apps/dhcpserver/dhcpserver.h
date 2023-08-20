@@ -6,10 +6,11 @@
 #ifndef __DHCPS_H__
 #define __DHCPS_H__
 
-#include "sdkconfig.h"
+//#include "sdkconfig.h"
 #include <stdbool.h>
 #include "lwip/ip_addr.h"
 #include "lwip/err.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,6 +63,9 @@ enum dhcps_offer_option{
 /**
  * @brief Definitions related to lease time, units and limits
  */
+#define CONFIG_LWIP_DHCPS_LEASE_UNIT 1000
+#define CONFIG_LWIP_DHCPS_MAX_STATION_NUM 10
+
 #define DHCPS_COARSE_TIMER_SECS  1
 #define DHCPS_MAX_LEASE 0x64
 #define DHCPS_LEASE_TIME_DEF (120)
