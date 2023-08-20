@@ -44,6 +44,11 @@ sources = Split("""
 
 	""")
 
+if 'CFG_ENABLE_DHCP_SERVER' in baseEnv and baseEnv['CFG_ENABLE_DHCP_SERVER']:
+	sources.append(File(Split("""
+		contrib/apps/dhcpserver/dhcpserver.c
+	""")))
+
 if 'SIMULATION' in targetEnv:
 	sources.append('contrib/ports/win32/pcapif.c')
 	sources.append('contrib/ports/win32/pcapif_helper.c')
