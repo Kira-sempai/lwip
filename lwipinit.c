@@ -2,6 +2,9 @@
 #include <lwip/tcpip.h>
 #include <lwip/opt.h>
 #include <lwip/timeouts.h>
+#include <lwip/pbuf.h>
+#include <lwip/netif.h>
+#include <lwip/prot/ethernet.h>
 
 #if !NO_SYS
 static sys_sem_t init_sem;
@@ -190,4 +193,15 @@ void lwipRun(void)
 #if NO_SYS
 	sys_check_timeouts();
 #endif
+}
+
+void lwip_hook_unknown_eth_protocol(struct pbuf *p, struct netif *netif) {
+	  struct eth_hdr *ethhdr;
+	  ethhdr = (struct eth_hdr *)p->payload;
+	  printf("lwip_hook_unknown_eth_protocol: dest:%02x:%02x:%02x:%02x:%02x:%02x, src:%02x:%02x:%02x:%02x:%02x:%02x, type:%04x\n",
+	               (unsigned char)ethhdr->dest.addr[0], (unsigned char)ethhdr->dest.addr[1], (unsigned char)ethhdr->dest.addr[2],
+	               (unsigned char)ethhdr->dest.addr[3], (unsigned char)ethhdr->dest.addr[4], (unsigned char)ethhdr->dest.addr[5],
+	               (unsigned char)ethhdr->src.addr[0],  (unsigned char)ethhdr->src.addr[1],  (unsigned char)ethhdr->src.addr[2],
+	               (unsigned char)ethhdr->src.addr[3],  (unsigned char)ethhdr->src.addr[4],  (unsigned char)ethhdr->src.addr[5],
+	               lwip_htons(ethhdr->type));
 }
