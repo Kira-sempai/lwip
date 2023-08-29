@@ -308,6 +308,9 @@ typedef struct fs_pextension fs_file_extension;
 //#define TCP_QLEN_DEBUG                  LWIP_DBG_ON
 //#define HTTPD_DEBUG         LWIP_DBG_ON
 //#define LWIP_STATS_DISPLAY 1
+
+#define LWIP_HOOK_UNKNOWN_ETH_PROTOCOL(pbuf, netif) lwip_hook_unknown_eth_protocol(pbuf, netif)
+
 #endif
 
 #include <stdio.h>
